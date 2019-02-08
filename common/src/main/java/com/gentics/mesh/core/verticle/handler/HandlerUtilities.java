@@ -60,7 +60,7 @@ public class HandlerUtilities {
 	public HandlerUtilities(Database database, SearchQueue searchQueue, MeshOptions meshOptions) {
 		this.searchQueue = searchQueue;
 		this.database = database;
-		this.clustered = meshOptions.getClusterOptions() != null && meshOptions.getClusterOptions().isEnabled();
+		this.clustered = true;
 	}
 
 	/**
