@@ -19,6 +19,7 @@ import com.gentics.mesh.core.endpoint.handler.AbstractHandler;
 import com.gentics.mesh.core.endpoint.node.BinaryFieldHandler;
 import com.gentics.mesh.core.rest.common.FieldContainer;
 import com.gentics.mesh.core.rest.common.RestModel;
+import com.gentics.mesh.core.verticle.handler.HandlerUtilities;
 import com.gentics.mesh.graphdb.spi.Database;
 import com.gentics.mesh.json.JsonUtil;
 import com.gentics.mesh.util.Tuple;
@@ -44,10 +45,13 @@ public abstract class AbstractMigrationHandler extends AbstractHandler implement
 
 	protected BinaryFieldHandler binaryFieldHandler;
 
-	public AbstractMigrationHandler(Database db, SearchQueue searchQueue, BinaryFieldHandler binaryFieldHandler) {
+	protected HandlerUtilities utils;
+
+	public AbstractMigrationHandler(Database db, SearchQueue searchQueue, BinaryFieldHandler binaryFieldHandler, HandlerUtilities utils) {
 		this.db = db;
 		this.searchQueue = searchQueue;
 		this.binaryFieldHandler = binaryFieldHandler;
+		this.utils = utils;
 	}
 
 	/**
@@ -62,7 +66,7 @@ public abstract class AbstractMigrationHandler extends AbstractHandler implement
 	 * @throws IOException
 	 */
 	protected void prepareMigration(GraphFieldSchemaContainerVersion<?, ?, ?, ?, ?> fromVersion,
-			List<Tuple<String, List<Tuple<String, Object>>>> migrationScripts, Set<String> touchedFields) throws IOException {
+		List<Tuple<String, List<Tuple<String, Object>>>> migrationScripts, Set<String> touchedFields) throws IOException {
 		SchemaChange<?> change = fromVersion.getNextChange();
 		while (change != null) {
 			String migrationScript = change.getMigrationScript();
@@ -102,8 +106,8 @@ public abstract class AbstractMigrationHandler extends AbstractHandler implement
 	 * @throws Exception
 	 */
 	protected <T extends FieldContainer> void migrate(NodeMigrationActionContextImpl ac, GraphFieldContainer container, RestModel restModel,
-			GraphFieldSchemaContainerVersion<?, ?, ?, ?, ?> newVersion, Set<String> touchedFields,
-			List<Tuple<String, List<Tuple<String, Object>>>> migrationScripts, Class<T> clazz) throws Exception {
+		GraphFieldSchemaContainerVersion<?, ?, ?, ?, ?> newVersion, Set<String> touchedFields,
+		List<Tuple<String, List<Tuple<String, Object>>>> migrationScripts, Class<T> clazz) throws Exception {
 
 		// Remove all touched fields (if necessary, they will be readded later)
 		container.getFields().stream().filter(f -> touchedFields.contains(f.getFieldKey())).forEach(f -> f.removeField(container));
@@ -142,7 +146,8 @@ public abstract class AbstractMigrationHandler extends AbstractHandler implement
 	}
 
 	@ParametersAreNonnullByDefault
-	protected <T> List<Exception> migrateLoop(Iterable<T> containers, MigrationStatusHandler status, TriConsumer<SearchQueueBatch, T, List<Exception>> migrator) {
+	protected <T> List<Exception> migrateLoop(Iterable<T> containers, MigrationStatusHandler status,
+		TriConsumer<SearchQueueBatch, T, List<Exception>> migrator) {
 		// Iterate over all containers and invoke a migration for each one
 		long count = 0;
 		List<Exception> errorsDetected = new ArrayList<>();
@@ -152,9 +157,14 @@ public abstract class AbstractMigrationHandler extends AbstractHandler implement
 				// Each container migration has its own search queue batch which is then combined with other batch entries.
 				// This prevents adding partial entries from failed migrations.
 				SearchQueueBatch containerBatch = searchQueue.create();
-				db.tx(() -> {
-					migrator.accept(containerBatch, container, errorsDetected);
-				});
+				utils.lockClusterWrites();
+				try {
+					db.tx(() -> {
+						migrator.accept(containerBatch, container, errorsDetected);
+					});
+				} finally {
+					utils.unlockClusterWrites();
+				}
 				sqb.addAll(containerBatch);
 				status.incCompleted();
 				if (count % 50 == 0) {
