@@ -115,22 +115,28 @@ public class NodeCrudHandler extends AbstractCrudHandler<Node, NodeResponse> {
 	public void handleDeleteLanguage(InternalActionContext ac, String uuid, String languageTag) {
 		validateParameter(uuid, "uuid");
 
+		utils.lockClusterWrites();
+
 		utils.asyncTx(ac, () -> {
-			Node node = getRootVertex(ac).loadObjectByUuid(ac, uuid, DELETE_PERM);
-			Language language = MeshInternal.get().boot().meshRoot().getLanguageRoot().findByLanguageTag(languageTag);
-			if (language == null) {
-				throw error(NOT_FOUND, "error_language_not_found", languageTag);
+			try {
+				Node node = getRootVertex(ac).loadObjectByUuid(ac, uuid, DELETE_PERM);
+				Language language = MeshInternal.get().boot().meshRoot().getLanguageRoot().findByLanguageTag(languageTag);
+				if (language == null) {
+					throw error(NOT_FOUND, "error_language_not_found", languageTag);
+				}
+				String name = node.getDisplayName(ac);
+				SchemaContainer schema = node.getSchemaContainer();
+				// Create the batch first since we can't delete the container and access it later in batch creation
+				db.tx(() -> {
+					BulkActionContext bac = searchQueue.createBulkContext();
+					node.deleteLanguageContainer(ac, ac.getBranch(), languageTag, bac, true);
+					return bac.batch();
+				}).processSync();
+				node.onDeleted(uuid, name, schema, languageTag);
+				return null;
+			} finally {
+				utils.unlockClusterWrites();
 			}
-			String name = node.getDisplayName(ac);
-			SchemaContainer schema = node.getSchemaContainer();
-			// Create the batch first since we can't delete the container and access it later in batch creation
-			db.tx(() -> {
-				BulkActionContext bac = searchQueue.createBulkContext();
-				node.deleteLanguageContainer(ac, ac.getBranch(), languageTag, bac, true);
-				return bac.batch();
-			}).processSync();
-			node.onDeleted(uuid, name, schema, languageTag);
-			return null;
 		}, m -> ac.send(NO_CONTENT));
 	}
 
@@ -148,25 +154,31 @@ public class NodeCrudHandler extends AbstractCrudHandler<Node, NodeResponse> {
 		validateParameter(uuid, "uuid");
 		validateParameter(toUuid, "toUuid");
 
+		utils.lockClusterWrites();
+
 		utils.asyncTx(ac, () -> {
-			Project project = ac.getProject();
+			try {
+				Project project = ac.getProject();
 
-			// TODO Add support for moving nodes across projects.
-			// This is tricky since the branch consistency must be taken care of
-			// One option would be to delete all the version within the source project and create the in the target project
-			// The needed schema versions would need to be present in the target project branch as well.
+				// TODO Add support for moving nodes across projects.
+				// This is tricky since the branch consistency must be taken care of
+				// One option would be to delete all the version within the source project and create the in the target project
+				// The needed schema versions would need to be present in the target project branch as well.
 
-			// Load the node that should be moved
-			NodeRoot nodeRoot = project.getNodeRoot();
-			Node sourceNode = nodeRoot.loadObjectByUuid(ac, uuid, UPDATE_PERM);
-			Node targetNode = nodeRoot.loadObjectByUuid(ac, toUuid, UPDATE_PERM);
+				// Load the node that should be moved
+				NodeRoot nodeRoot = project.getNodeRoot();
+				Node sourceNode = nodeRoot.loadObjectByUuid(ac, uuid, UPDATE_PERM);
+				Node targetNode = nodeRoot.loadObjectByUuid(ac, toUuid, UPDATE_PERM);
 
-			db.tx(() -> {
-				SearchQueueBatch batch = searchQueue.create();
-				sourceNode.moveTo(ac, targetNode, batch);
-				return batch;
-			}).processSync();
-			return null;
+				db.tx(() -> {
+					SearchQueueBatch batch = searchQueue.create();
+					sourceNode.moveTo(ac, targetNode, batch);
+					return batch;
+				}).processSync();
+				return null;
+			} finally {
+				utils.unlockClusterWrites();
+			}
 		}, m -> ac.send(NO_CONTENT));
 
 	}
@@ -271,21 +283,27 @@ public class NodeCrudHandler extends AbstractCrudHandler<Node, NodeResponse> {
 		validateParameter(uuid, "uuid");
 		validateParameter(tagUuid, "tagUuid");
 
-		db.asyncTx(() -> {
-			Project project = ac.getProject();
-			Branch branch = ac.getBranch();
-			Node node = project.getNodeRoot().loadObjectByUuid(ac, uuid, UPDATE_PERM);
-			Tag tag = boot.meshRoot().getTagRoot().loadObjectByUuid(ac, tagUuid, READ_PERM);
+		utils.lockClusterWrites();
 
-			// TODO check whether the tag has already been assigned to the node. In this case we need to do nothing.
-			Tuple<Node, SearchQueueBatch> tuple = db.tx(() -> {
-				SearchQueueBatch batch = searchQueue.create();
-				node.addTag(tag, branch);
-				batch.store(node, branch.getUuid(), PUBLISHED, false);
-				batch.store(node, branch.getUuid(), DRAFT, false);
-				return Tuple.tuple(node, batch);
-			});
-			return tuple.v2().processAsync().andThen(tuple.v1().transformToRest(ac, 0));
+		db.asyncTx(() -> {
+			try {
+				Project project = ac.getProject();
+				Branch branch = ac.getBranch();
+				Node node = project.getNodeRoot().loadObjectByUuid(ac, uuid, UPDATE_PERM);
+				Tag tag = boot.meshRoot().getTagRoot().loadObjectByUuid(ac, tagUuid, READ_PERM);
+
+				// TODO check whether the tag has already been assigned to the node. In this case we need to do nothing.
+				Tuple<Node, SearchQueueBatch> tuple = db.tx(() -> {
+					SearchQueueBatch batch = searchQueue.create();
+					node.addTag(tag, branch);
+					batch.store(node, branch.getUuid(), PUBLISHED, false);
+					batch.store(node, branch.getUuid(), DRAFT, false);
+					return Tuple.tuple(node, batch);
+				});
+				return tuple.v2().processAsync().andThen(tuple.v1().transformToRest(ac, 0));
+			} finally {
+				utils.unlockClusterWrites();
+			}
 		}).subscribe(model -> ac.send(model, OK), ac::fail);
 
 	}
@@ -304,19 +322,25 @@ public class NodeCrudHandler extends AbstractCrudHandler<Node, NodeResponse> {
 		validateParameter(uuid, "uuid");
 		validateParameter(tagUuid, "tagUuid");
 
-		db.asyncTx(() -> {
-			Project project = ac.getProject();
-			Branch branch = ac.getBranch();
-			Node node = project.getNodeRoot().loadObjectByUuid(ac, uuid, UPDATE_PERM);
-			Tag tag = boot.meshRoot().getTagRoot().loadObjectByUuid(ac, tagUuid, READ_PERM);
+		utils.lockClusterWrites();
 
-			return db.tx(() -> {
-				SearchQueueBatch batch = searchQueue.create();
-				batch.store(node, branch.getUuid(), PUBLISHED, false);
-				batch.store(node, branch.getUuid(), DRAFT, false);
-				node.removeTag(tag, branch);
-				return batch;
-			}).processAsync().andThen(Single.just(Optional.empty()));
+		db.asyncTx(() -> {
+			try {
+				Project project = ac.getProject();
+				Branch branch = ac.getBranch();
+				Node node = project.getNodeRoot().loadObjectByUuid(ac, uuid, UPDATE_PERM);
+				Tag tag = boot.meshRoot().getTagRoot().loadObjectByUuid(ac, tagUuid, READ_PERM);
+
+				return db.tx(() -> {
+					SearchQueueBatch batch = searchQueue.create();
+					batch.store(node, branch.getUuid(), PUBLISHED, false);
+					batch.store(node, branch.getUuid(), DRAFT, false);
+					node.removeTag(tag, branch);
+					return batch;
+				}).processAsync().andThen(Single.just(Optional.empty()));
+			} finally {
+				utils.unlockClusterWrites();
+			}
 		}).subscribe(model -> ac.send(NO_CONTENT), ac::fail);
 	}
 
@@ -348,14 +372,20 @@ public class NodeCrudHandler extends AbstractCrudHandler<Node, NodeResponse> {
 	public void handlePublish(InternalActionContext ac, String uuid) {
 		validateParameter(uuid, "uuid");
 
+		utils.lockClusterWrites();
+
 		db.asyncTx(() -> {
-			Node node = getRootVertex(ac).loadObjectByUuid(ac, uuid, PUBLISH_PERM);
-			SearchQueueBatch sqb = db.tx(() -> {
-				BulkActionContext bac = searchQueue.createBulkContext();
-				node.publish(ac, bac);
-				return bac.batch();
-			});
-			return sqb.processAsync().andThen(Single.just(node.transformToPublishStatus(ac)));
+			try {
+				Node node = getRootVertex(ac).loadObjectByUuid(ac, uuid, PUBLISH_PERM);
+				SearchQueueBatch sqb = db.tx(() -> {
+					BulkActionContext bac = searchQueue.createBulkContext();
+					node.publish(ac, bac);
+					return bac.batch();
+				});
+				return sqb.processAsync().andThen(Single.just(node.transformToPublishStatus(ac)));
+			} finally {
+				utils.unlockClusterWrites();
+			}
 		}).subscribe(model -> ac.send(model, OK), ac::fail);
 	}
 
@@ -370,11 +400,17 @@ public class NodeCrudHandler extends AbstractCrudHandler<Node, NodeResponse> {
 	public void handleTakeOffline(InternalActionContext ac, String uuid) {
 		validateParameter(uuid, "uuid");
 
+		utils.lockClusterWrites();
+
 		db.asyncTx(() -> {
-			Node node = getRootVertex(ac).loadObjectByUuid(ac, uuid, PUBLISH_PERM);
-			BulkActionContext bac = searchQueue.createBulkContext();
-			node.takeOffline(ac, bac);
-			return bac.batch().processAsync().andThen(Single.just(Optional.empty()));
+			try {
+				Node node = getRootVertex(ac).loadObjectByUuid(ac, uuid, PUBLISH_PERM);
+				BulkActionContext bac = searchQueue.createBulkContext();
+				node.takeOffline(ac, bac);
+				return bac.batch().processAsync().andThen(Single.just(Optional.empty()));
+			} finally {
+				utils.unlockClusterWrites();
+			}
 		}).subscribe(model -> ac.send(NO_CONTENT), ac::fail);
 	}
 
@@ -410,14 +446,20 @@ public class NodeCrudHandler extends AbstractCrudHandler<Node, NodeResponse> {
 	public void handlePublish(InternalActionContext ac, String uuid, String languageTag) {
 		validateParameter(uuid, "uuid");
 
+		utils.lockClusterWrites();
+
 		db.asyncTx(() -> {
-			Node node = getRootVertex(ac).loadObjectByUuid(ac, uuid, PUBLISH_PERM);
-			SearchQueueBatch sqb = db.tx(() -> {
-				BulkActionContext bac = searchQueue.createBulkContext();
-				node.publish(ac, bac, languageTag);
-				return bac.batch();
-			});
-			return sqb.processAsync().andThen(Single.just(node.transformToPublishStatus(ac, languageTag)));
+			try {
+				Node node = getRootVertex(ac).loadObjectByUuid(ac, uuid, PUBLISH_PERM);
+				SearchQueueBatch sqb = db.tx(() -> {
+					BulkActionContext bac = searchQueue.createBulkContext();
+					node.publish(ac, bac, languageTag);
+					return bac.batch();
+				});
+				return sqb.processAsync().andThen(Single.just(node.transformToPublishStatus(ac, languageTag)));
+			} finally {
+				utils.unlockClusterWrites();
+			}
 		}).subscribe(model -> ac.send(model, OK), ac::fail);
 	}
 
@@ -434,14 +476,20 @@ public class NodeCrudHandler extends AbstractCrudHandler<Node, NodeResponse> {
 	public void handleTakeOffline(InternalActionContext ac, String uuid, String languageTag) {
 		validateParameter(uuid, "uuid");
 
+		utils.lockClusterWrites();
+
 		db.asyncTx(() -> {
-			Node node = getRootVertex(ac).loadObjectByUuid(ac, uuid, PUBLISH_PERM);
-			return db.tx(() -> {
-				BulkActionContext bac = searchQueue.createBulkContext();
-				Branch branch = ac.getBranch(ac.getProject());
-				node.takeOffline(ac, bac, branch, languageTag);
-				return bac.batch();
-			}).processAsync().andThen(Single.just(Optional.empty()));
+			try {
+				Node node = getRootVertex(ac).loadObjectByUuid(ac, uuid, PUBLISH_PERM);
+				return db.tx(() -> {
+					BulkActionContext bac = searchQueue.createBulkContext();
+					Branch branch = ac.getBranch(ac.getProject());
+					node.takeOffline(ac, bac, branch, languageTag);
+					return bac.batch();
+				}).processAsync().andThen(Single.just(Optional.empty()));
+			} finally {
+				utils.unlockClusterWrites();
+			}
 		}).subscribe(model -> ac.send(NO_CONTENT), ac::fail);
 	}
 
@@ -481,16 +529,22 @@ public class NodeCrudHandler extends AbstractCrudHandler<Node, NodeResponse> {
 	public void handleBulkTagUpdate(InternalActionContext ac, String nodeUuid) {
 		validateParameter(nodeUuid, "nodeUuid");
 
-		db.asyncTx(() -> {
-			Project project = ac.getProject();
-			Node node = project.getNodeRoot().loadObjectByUuid(ac, nodeUuid, UPDATE_PERM);
-			Tuple<TransformablePage<? extends Tag>, SearchQueueBatch> tuple = db.tx(() -> {
-				SearchQueueBatch batch = searchQueue.create();
-				TransformablePage<? extends Tag> tags = node.updateTags(ac, batch);
-				return Tuple.tuple(tags, batch);
-			});
+		utils.lockClusterWrites();
 
-			return tuple.v2().processAsync().andThen(tuple.v1().transformToRest(ac, 0));
+		db.asyncTx(() -> {
+			try {
+				Project project = ac.getProject();
+				Node node = project.getNodeRoot().loadObjectByUuid(ac, nodeUuid, UPDATE_PERM);
+				Tuple<TransformablePage<? extends Tag>, SearchQueueBatch> tuple = db.tx(() -> {
+					SearchQueueBatch batch = searchQueue.create();
+					TransformablePage<? extends Tag> tags = node.updateTags(ac, batch);
+					return Tuple.tuple(tags, batch);
+				});
+
+				return tuple.v2().processAsync().andThen(tuple.v1().transformToRest(ac, 0));
+			} finally {
+				utils.unlockClusterWrites();
+			}
 		}).subscribe(model -> ac.send(model, OK), ac::fail);
 
 	}
