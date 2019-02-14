@@ -203,9 +203,8 @@ public class BinaryFieldHandler extends AbstractHandler {
 		ac.put("sourceFile", ul.uploadedFileName());
 
 		utils.lockClusterWrites();
-
-		db.tx(() -> {
-			try {
+		try {
+			db.tx(() -> {
 				Project project = ac.getProject();
 				Branch branch = ac.getBranch();
 				Node node = project.getNodeRoot().loadObjectByUuid(ac, nodeUuid, UPDATE_PERM);
@@ -308,10 +307,10 @@ public class BinaryFieldHandler extends AbstractHandler {
 				}
 
 				return batch.store(node, branch.getUuid(), DRAFT, false).processAsync().andThen(node.transformToRest(ac, 0));
-			} finally {
-				utils.unlockClusterWrites();
-			}
-		}).subscribe(model -> ac.send(model, CREATED), ac::fail);
+			}).subscribe(model -> ac.send(model, CREATED), ac::fail);
+		} finally {
+			utils.unlockClusterWrites();
+		}
 	}
 
 	/**
