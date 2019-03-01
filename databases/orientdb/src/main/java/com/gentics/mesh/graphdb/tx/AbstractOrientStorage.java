@@ -19,6 +19,7 @@ import com.orientechnologies.orient.core.command.OCommandOutputListener;
 import com.orientechnologies.orient.core.db.ODatabaseSession;
 import com.tinkerpop.blueprints.Vertex;
 import com.tinkerpop.blueprints.impls.orient.OrientGraph;
+import com.tinkerpop.blueprints.impls.orient.OrientGraphNoTx;
 
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
@@ -44,14 +45,19 @@ public abstract class AbstractOrientStorage implements OrientStorage {
 		if (log.isDebugEnabled()) {
 			log.debug("Clearing graph");
 		}
-		OrientGraph tx = rawTx();
+		OrientGraphNoTx tx = rawNoTx();
 		try {
 			for (Vertex vertex : tx.getVertices()) {
 				vertex.remove();
 			}
 		} finally {
-			tx.commit();
 			tx.shutdown();
+		}
+		try {
+			Thread.sleep(Integer.MAX_VALUE);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 		if (log.isDebugEnabled()) {
 			log.debug("Cleared graph");
