@@ -16,10 +16,14 @@ import com.gentics.mesh.core.data.Role;
 import com.gentics.mesh.core.data.User;
 import com.gentics.mesh.core.data.impl.RoleImpl;
 import com.gentics.mesh.core.data.relationship.GraphPermission;
+import com.gentics.mesh.core.rest.MeshEvent;
 import com.gentics.mesh.core.rest.common.GenericRestResponse;
 import com.gentics.mesh.core.rest.common.PermissionInfo;
 import com.gentics.mesh.core.rest.common.RestModel;
 import com.gentics.mesh.core.rest.event.MeshElementEventModel;
+import com.gentics.mesh.core.rest.event.MeshElementEventProperties;
+import com.gentics.mesh.core.rest.event.MeshEventModelProperties;
+import com.gentics.mesh.core.rest.event.SimpleElementEventModel;
 import com.gentics.mesh.core.rest.event.impl.MeshElementEventModelImpl;
 import com.gentics.mesh.dagger.MeshInternal;
 import com.gentics.mesh.madlmigration.TraversalResult;
@@ -126,34 +130,28 @@ public abstract class AbstractMeshCoreVertex<T extends RestModel, R extends Mesh
 
 	@Override
 	public MeshElementEventModel onUpdated() {
-		MeshElementEventModel event = new MeshElementEventModelImpl();
-		event.setEvent(getTypeInfo().getOnUpdated());
-		fillEventInfo(event);
-		return event;
+		return createEvent(getTypeInfo().getOnUpdated());
 	}
 
 	@Override
 	public MeshElementEventModel onCreated() {
-		MeshElementEventModel event = new MeshElementEventModelImpl();
-		event.setEvent(getTypeInfo().getOnCreated());
-		fillEventInfo(event);
-		return event;
+		return createEvent(getTypeInfo().getOnCreated());
 	}
 
 	@Override
 	public MeshElementEventModel onDeleted() {
-		MeshElementEventModel event = new MeshElementEventModelImpl();
-		event.setEvent(getTypeInfo().getOnDeleted());
-		fillEventInfo(event);
-		return event;
+		return createEvent(getTypeInfo().getOnDeleted());
 	}
 
-	protected void fillEventInfo(MeshElementEventModel model) {
+	protected MeshElementEventModel createEvent(MeshEvent event) {
+		SimpleElementEventModel model = new SimpleElementEventModel(
+			new MeshEventModelProperties(Mesh.mesh().getOptions().getNodeName(), event),
+			new MeshElementEventProperties(getUuid())
+		);
 		if (this instanceof NamedElement) {
 			model.setName(((NamedElement) this).getName());
 		}
-		model.setOrigin(Mesh.mesh().getOptions().getNodeName());
-		model.setUuid(getUuid());
+		return model;
 	}
 
 	@Override

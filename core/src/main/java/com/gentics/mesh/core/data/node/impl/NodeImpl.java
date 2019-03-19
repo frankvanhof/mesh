@@ -2097,7 +2097,7 @@ public class NodeImpl extends AbstractGenericFieldContainerVertex<NodeResponse, 
 
 	@Override
 	public NodeMeshEventModel onDeleted(String uuid, String name, SchemaContainer schema, String branchUuid, String type, String languageTag) {
-		NodeMeshEventModel event = new NodeMeshEventModel();
+		NodeMeshEventModel event = new NodeMeshEventModel(uuid, origin, baseProperies, project, branchUuid);
 		event.setEvent(getTypeInfo().getOnDeleted());
 		event.setUuid(uuid);
 		event.setLanguageTag(languageTag);

@@ -264,22 +264,8 @@ public class TagImpl extends AbstractMeshCoreVertex<TagResponse, Tag> implements
 	}
 
 	@Override
-	public TagMeshEventModel onCreated() {
-		return createEvent(getTypeInfo().getOnCreated());
-	}
-
-	@Override
-	public TagMeshEventModel onUpdated() {
-		return createEvent(getTypeInfo().getOnUpdated());
-	}
-
-	@Override
-	public TagMeshEventModel onDeleted() {
-		return createEvent(getTypeInfo().getOnDeleted());
-	}
-
-	private TagMeshEventModel createEvent(MeshEvent type) {
-		TagMeshEventModel event = new TagMeshEventModel();
+	protected TagMeshEventModel createEvent(MeshEvent type) {
+		TagMeshEventModel event = new TagMeshEventModel(baseProperties);
 		event.setEvent(type);
 		fillEventInfo(event);
 

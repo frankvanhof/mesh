@@ -755,7 +755,7 @@ public class NodeGraphFieldContainerImpl extends AbstractGraphFieldContainerImpl
 	 * @return Created model
 	 */
 	private NodeMeshEventModel createEvent(MeshEvent event, String branchUuid, ContainerType type) {
-		NodeMeshEventModel model = new NodeMeshEventModel();
+		NodeMeshEventModel model = new NodeMeshEventModel(uuid, origin, baseProperies, project, branchUuid);
 		model.setEvent(event);
 		Node node = getParentNode(branchUuid);
 		String nodeUuid = node.getUuid();

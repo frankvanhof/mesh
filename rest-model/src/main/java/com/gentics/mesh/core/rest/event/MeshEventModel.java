@@ -17,25 +17,11 @@ public interface MeshEventModel extends RestModel {
 	String getOrigin();
 
 	/**
-	 * Set the mesh cluster node from which the event originates.
-	 * 
-	 * @param origin
-	 */
-	void setOrigin(String origin);
-
-	/**
 	 * Return the event to which the model belongs.
 	 * 
 	 * @return
 	 */
 	MeshEvent getEvent();
-
-	/**
-	 * Set the event to which the model belongs.
-	 * 
-	 * @param address
-	 */
-	void setEvent(MeshEvent event);
 
 	/**
 	 * Returns the event cause info which contains information about the root action which lead to the event.

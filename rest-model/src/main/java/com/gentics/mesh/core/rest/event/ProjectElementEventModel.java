@@ -1,27 +1,24 @@
-package com.gentics.mesh.core.rest.event.tag;
+package com.gentics.mesh.core.rest.event;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonUnwrapped;
 import com.gentics.mesh.core.rest.MeshEvent;
-import com.gentics.mesh.core.rest.event.EventCauseInfo;
-import com.gentics.mesh.core.rest.event.MeshProjectElementEventModel;
-import com.gentics.mesh.core.rest.event.ProjectElementEventModel;
 import com.gentics.mesh.core.rest.project.ProjectReference;
-import com.gentics.mesh.core.rest.tag.TagFamilyReference;
 
-public class TagMeshEventModel implements MeshProjectElementEventModel {
+public class ProjectElementEventModel implements MeshProjectElementEventModel {
 
 	@JsonUnwrapped
-	private final ProjectElementEventModel baseProperties;
+	private final SimpleElementEventModel baseProperties;
 
 	@JsonProperty(required = true)
-	@JsonPropertyDescription("The tag family of this tag")
-	private TagFamilyReference tagFamily;
+	@JsonPropertyDescription("Reference to the project to which the element belonged.")
+	private ProjectReference project;
 
-	public TagMeshEventModel(ProjectElementEventModel baseProperties, TagFamilyReference tagFamily) {
+
+	public ProjectElementEventModel(SimpleElementEventModel baseProperties, ProjectReference project) {
 		this.baseProperties = baseProperties;
-		this.tagFamily = tagFamily;
+		this.project = project;
 	}
 
 	@Override
@@ -66,20 +63,11 @@ public class TagMeshEventModel implements MeshProjectElementEventModel {
 
 	@Override
 	public ProjectReference getProject() {
-		return baseProperties.getProject();
+		return project;
 	}
 
 	@Override
 	public void setProject(ProjectReference project) {
-		baseProperties.setProject(project);
+		this.project = project;
 	}
-
-	public TagFamilyReference getTagFamily() {
-		return tagFamily;
-	}
-
-	public void setTagFamily(TagFamilyReference tagFamily) {
-		this.tagFamily = tagFamily;
-	}
-
 }

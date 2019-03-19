@@ -4,12 +4,29 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 import com.gentics.mesh.assertj.AbstractMeshElementEventModelAssert;
+import com.gentics.mesh.assertj.AbstractMeshEventModelAssert;
 import com.gentics.mesh.core.rest.event.node.NodeMeshEventModel;
 
-public class NodeMeshEventModelAssert extends AbstractMeshElementEventModelAssert<NodeMeshEventModelAssert, NodeMeshEventModel> {
+public class NodeMeshEventModelAssert extends AbstractMeshEventModelAssert<NodeMeshEventModelAssert, NodeMeshEventModel> {
 
 	public NodeMeshEventModelAssert(NodeMeshEventModel actual) {
 		super(actual, NodeMeshEventModelAssert.class);
+	}
+
+
+	public NodeMeshEventModelAssert hasName(String name) {
+		assertEquals("Name in the event did not match.", name, actual.getName());
+		return this;
+	}
+
+	public NodeMeshEventModelAssert hasUuid(String uuid) {
+		assertEquals("Uuid in the event did not match.", uuid, actual.getUuid());
+		return this;
+	}
+
+	public NodeMeshEventModelAssert uuidNotNull() {
+		assertNotNull("Uuid in the event should not be null.", actual.getUuid());
+		return this;
 	}
 
 	public NodeMeshEventModelAssert hasBranchUuid(String uuid) {
