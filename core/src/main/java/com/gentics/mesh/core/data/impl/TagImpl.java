@@ -33,6 +33,7 @@ import com.gentics.mesh.core.data.node.impl.NodeImpl;
 import com.gentics.mesh.core.data.page.TransformablePage;
 import com.gentics.mesh.core.data.page.impl.DynamicTransformablePageImpl;
 import com.gentics.mesh.core.rest.MeshEvent;
+import com.gentics.mesh.core.rest.event.ProjectElementEventModel;
 import com.gentics.mesh.core.rest.event.tag.TagMeshEventModel;
 import com.gentics.mesh.core.rest.project.ProjectReference;
 import com.gentics.mesh.core.rest.tag.TagFamilyReference;
@@ -265,20 +266,10 @@ public class TagImpl extends AbstractMeshCoreVertex<TagResponse, Tag> implements
 
 	@Override
 	protected TagMeshEventModel createEvent(MeshEvent type) {
-		TagMeshEventModel event = new TagMeshEventModel(baseProperties);
-		event.setEvent(type);
-		fillEventInfo(event);
-
-		// .project
-		Project project = getProject();
-		ProjectReference reference = project.transformToReference();
-		event.setProject(reference);
-
-		// .tagFamily
-		TagFamily tagFamily = getTagFamily();
-		TagFamilyReference tagFamilyReference = tagFamily.transformToReference();
-		event.setTagFamily(tagFamilyReference);
-		return event;
+		return new TagMeshEventModel(new ProjectElementEventModel(
+			createSimpleEventModel(type),
+			getProject().transformToReference()
+		), getTagFamily().transformToReference());
 	}
 
 }

@@ -22,6 +22,7 @@ public abstract class AbstractNameUuidReference<T> implements NameUuidReference<
 	private String uuid;
 
 	public AbstractNameUuidReference() {
+		System.out.println("Hey");
 	}
 
 	/**

@@ -26,6 +26,7 @@ import com.gentics.mesh.core.data.generic.MeshVertexImpl;
 import com.gentics.mesh.core.data.page.Page;
 import com.gentics.mesh.core.data.page.impl.DynamicTransformablePageImpl;
 import com.gentics.mesh.core.data.relationship.GraphPermission;
+import com.gentics.mesh.core.rest.common.PermissionInfo;
 import com.gentics.mesh.core.rest.event.role.PermissionChangedEventModel;
 import com.gentics.mesh.core.rest.role.RoleReference;
 import com.gentics.mesh.core.rest.role.RoleResponse;
@@ -232,11 +233,12 @@ public class RoleImpl extends AbstractMeshCoreVertex<RoleResponse, Role> impleme
 	}
 
 	@Override
-	public PermissionChangedEventModel onPermissionChanged() {
-		PermissionChangedEventModel model = new PermissionChangedEventModel();
-		model.setEvent(ROLE_PERMISSIONS_CHANGED);
-		fillEventInfo(model);
-		return model;
+	public PermissionChangedEventModel onPermissionChanged(PermissionInfo permissions) {
+		return new PermissionChangedEventModel(
+			createSimpleEventModel(ROLE_PERMISSIONS_CHANGED),
+			// TODO insert element event
+			null, null,
+			permissions
+		);
 	}
-
 }

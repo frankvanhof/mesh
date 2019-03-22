@@ -25,6 +25,8 @@ import com.gentics.mesh.core.rest.MeshEvent;
 import com.gentics.mesh.core.rest.admin.migration.MigrationStatus;
 import com.gentics.mesh.core.rest.admin.migration.MigrationType;
 import com.gentics.mesh.core.rest.event.migration.MicroschemaMigrationMeshEventModel;
+import com.gentics.mesh.core.rest.event.migration.MigrationMeshEventModelProperties;
+import com.gentics.mesh.core.rest.event.migration.SchemaMigrationMeshEventModel;
 import com.gentics.mesh.core.rest.event.node.MicroschemaMigrationCause;
 import com.gentics.mesh.core.rest.job.JobWarningList;
 import com.gentics.mesh.dagger.DB;
@@ -50,23 +52,11 @@ public class MicronodeMigrationJobImpl extends JobImpl {
 	}
 
 	public MicroschemaMigrationMeshEventModel createEvent(MeshEvent event, MigrationStatus status) {
-		MicroschemaMigrationMeshEventModel model = new MicroschemaMigrationMeshEventModel();
-		model.setEvent(event);
-
-		MicroschemaContainerVersion toVersion = getToMicroschemaVersion();
-		model.setToVersion(toVersion.transformToReference());
-
-		MicroschemaContainerVersion fromVersion = getFromMicroschemaVersion();
-		model.setFromVersion(fromVersion.transformToReference());
-
-		Branch branch = getBranch();
-		Project project = branch.getProject();
-		model.setProject(project.transformToReference());
-		model.setBranch(branch.transformToReference());
-
-		model.setOrigin(Mesh.mesh().getOptions().getNodeName());
-		model.setStatus(status);
-		return model;
+		return new MicroschemaMigrationMeshEventModel(
+			createMigrationEventModel(event, status),
+			getFromMicroschemaVersion().transformToReference(),
+			getToMicroschemaVersion().transformToReference()
+		);
 	}
 
 	private MicronodeMigrationContext prepareContext() {
@@ -102,12 +92,7 @@ public class MicronodeMigrationJobImpl extends JobImpl {
 						+ fromContainerVersion.getUuid() + "} to version {" + toContainerVersion.getUuid() + "} was requested");
 				}
 
-				MicroschemaMigrationCause cause = new MicroschemaMigrationCause();
-				cause.setFromVersion(fromContainerVersion.transformToReference());
-				cause.setToVersion(toContainerVersion.transformToReference());
-				cause.setBranch(branch.transformToReference());
-				cause.setOrigin(Mesh.mesh().getOptions().getNodeName());
-				cause.setUuid(getUuid());
+				MicroschemaMigrationCause cause = new MicroschemaMigrationCause(createEvent(MICROSCHEMA_MIGRATION_START, STARTING));
 				context.setCause(cause);
 
 				context.getStatus().commit();

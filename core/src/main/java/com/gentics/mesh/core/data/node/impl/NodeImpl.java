@@ -47,6 +47,13 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
+import com.gentics.mesh.Mesh;
+import com.gentics.mesh.core.rest.MeshEvent;
+import com.gentics.mesh.core.rest.event.MeshElementEventProperties;
+import com.gentics.mesh.core.rest.event.MeshEventModelProperties;
+import com.gentics.mesh.core.rest.event.ProjectElementEventModel;
+import com.gentics.mesh.core.rest.event.ProjectEventModelProperties;
+import com.gentics.mesh.core.rest.event.SimpleElementEventModel;
 import org.apache.commons.lang3.NotImplementedException;
 
 import com.gentics.mesh.context.BulkActionContext;
@@ -1440,7 +1447,7 @@ public class NodeImpl extends AbstractGenericFieldContainerVertex<NodeResponse, 
 
 		// 3. Now check if the node has no more field containers in any branch. We can delete it in those cases
 		if (getGraphFieldContainerCount() == 0) {
-			bac.add(onDeleted(getUuid(), getDisplayName(ac), getSchemaContainer(), null, null, null));
+			bac.add(onDeleted(getDisplayName(ac), null, null, null));
 			delete(bac);
 		} else {
 			// Otherwise we need to remove the "parent" edge for the branch
@@ -2086,49 +2093,38 @@ public class NodeImpl extends AbstractGenericFieldContainerVertex<NodeResponse, 
 	}
 
 	public NodeMovedEventModel onNodeMoved(Node target) {
-		NodeMovedEventModel model = new NodeMovedEventModel();
-		model.setEvent(NODE_MOVED);
-		model.setSource(transformToMinimalReference());
-		model.setTarget(target.transformToMinimalReference());
-		return model;
+		return new NodeMovedEventModel(
+			MeshEventModelProperties.fromCurrentNode(NODE_MOVED),
+			transformToMinimalReference(),
+			target.transformToMinimalReference()
+		);
 	}
 
-	
-
 	@Override
-	public NodeMeshEventModel onDeleted(String uuid, String name, SchemaContainer schema, String branchUuid, String type, String languageTag) {
-		NodeMeshEventModel event = new NodeMeshEventModel(uuid, origin, baseProperies, project, branchUuid);
-		event.setEvent(getTypeInfo().getOnDeleted());
-		event.setUuid(uuid);
-		event.setLanguageTag(languageTag);
-		event.setType(type);
-		event.setBranchUuid(branchUuid);
-		if (schema != null) {
-			event.setSchema(schema.transformToReference());
-		}
-		return event;
+	public NodeMeshEventModel onDeleted(String name, String branchUuid, String type, String languageTag) {
+		SimpleElementEventModel simpleModel = new SimpleElementEventModel(
+			new MeshEventModelProperties(Mesh.mesh().getOptions().getNodeName(), getTypeInfo().getOnDeleted()),
+			new MeshElementEventProperties(getUuid())
+		);
+		simpleModel.setName(name);
+		return new NodeMeshEventModel(new ProjectElementEventModel(
+			simpleModel,
+			getProject().transformToReference()
+		), branchUuid);
 	}
 
 	@Override
 	public NodeTaggedEventModel onTagged(Tag tag, Branch branch, Assignment assignment) {
-		NodeTaggedEventModel model = new NodeTaggedEventModel();
-		model.setTag(tag.transformToReference());
+		MeshEvent event = assignment == Assignment.ASSIGNED
+			? NODE_TAGGED
+			: NODE_UNTAGGED;
 
-		model.setBranch(branch.transformToReference());
-		model.setProject(getProject().transformToReference());
-		model.setNode(transformToMinimalReference());
-
-		switch (assignment) {
-		case ASSIGNED:
-			model.setEvent(NODE_TAGGED);
-			break;
-
-		case UNASSIGNED:
-			model.setEvent(NODE_UNTAGGED);
-			break;
-		}
-
-		return model;
+		return new NodeTaggedEventModel(
+			new ProjectEventModelProperties(MeshEventModelProperties.fromCurrentNode(event), getProject().transformToReference()),
+			tag.transformToReference(),
+			branch.transformToReference(),
+			transformToMinimalReference()
+		);
 	}
 
 	@Override

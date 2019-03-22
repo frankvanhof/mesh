@@ -41,6 +41,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.gentics.mesh.core.rest.event.MeshElementEventModel;
 import org.junit.After;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -58,7 +59,6 @@ import com.gentics.mesh.core.rest.error.GenericRestException;
 import com.gentics.mesh.core.rest.event.EventCauseInfo;
 import com.gentics.mesh.core.rest.event.branch.BranchMicroschemaAssignModel;
 import com.gentics.mesh.core.rest.event.branch.BranchSchemaAssignEventModel;
-import com.gentics.mesh.core.rest.event.impl.MeshElementEventModelImpl;
 import com.gentics.mesh.core.rest.event.migration.SchemaMigrationMeshEventModel;
 import com.gentics.mesh.core.rest.event.node.NodeMeshEventModel;
 import com.gentics.mesh.core.rest.event.node.SchemaMigrationCause;
@@ -101,7 +101,7 @@ public class SchemaEndpointTest extends AbstractMeshTest implements BasicRestTes
 
 		assertThat(trackingSearchProvider()).hasEvents(0, 0, 0, 0);
 
-		expect(SCHEMA_CREATED).match(1, MeshElementEventModelImpl.class, event -> {
+		expect(SCHEMA_CREATED).match(1, MeshElementEventModel.class, event -> {
 			assertThat(event).hasName(createRequest.getName()).uuidNotNull();
 		});
 
@@ -384,7 +384,7 @@ public class SchemaEndpointTest extends AbstractMeshTest implements BasicRestTes
 		microschemaRequest.addField(FieldUtil.createStringFieldSchema("text"));
 		microschemaRequest.addField(FieldUtil.createNodeFieldSchema("nodeRef").setAllowedSchemas("content"));
 
-		expect(MICROSCHEMA_CREATED).match(1, MeshElementEventModelImpl.class, event -> {
+		expect(MICROSCHEMA_CREATED).match(1, MeshElementEventModel.class, event -> {
 			assertEquals("The microschema name did not match.", MICROSCHEMA_NAME, event.getName());
 			assertNotNull("The schema uuid was not set", event.getUuid());
 			assertNotNull("The origin has not been set", event.getOrigin());
@@ -402,7 +402,7 @@ public class SchemaEndpointTest extends AbstractMeshTest implements BasicRestTes
 		// 2. Add micronode field to content schema
 		schemaUpdate.addField(FieldUtil.createMicronodeFieldSchema("micro").setAllowedMicroSchemas("TestMicroschema"));
 
-		expect(SCHEMA_UPDATED).match(1, MeshElementEventModelImpl.class, event -> {
+		expect(SCHEMA_UPDATED).match(1, MeshElementEventModel.class, event -> {
 			assertEquals("content", event.getName());
 			assertEquals(schemaUuid, event.getUuid());
 		});
@@ -448,7 +448,7 @@ public class SchemaEndpointTest extends AbstractMeshTest implements BasicRestTes
 			EventCauseInfo cause = event.getCause();
 			assertTrue("The cause of the node update event did not have the correct type.",cause instanceof SchemaMigrationCause);
 			SchemaMigrationCause migrationCause = (SchemaMigrationCause)cause;
-			assertMigrationEvent(migrationCause, schemaVersion, schemaUuid);
+			assertMigrationEvent(migrationCause.getCauseEvent(), schemaVersion, schemaUuid);
 		});
 		expect(SCHEMA_MIGRATION_FINISHED).match(1, SchemaMigrationMeshEventModel.class, event -> {
 			assertMigrationEvent(event, schemaVersion, schemaUuid);
@@ -566,7 +566,7 @@ public class SchemaEndpointTest extends AbstractMeshTest implements BasicRestTes
 			return tx.getGraph().getVertices("uuid", versionUuid).iterator().hasNext();
 		}));
 
-		expect(SCHEMA_DELETED).match(1, MeshElementEventModelImpl.class, event -> {
+		expect(SCHEMA_DELETED).match(1, MeshElementEventModel.class, event -> {
 			assertThat(event).hasName("content").hasUuid(uuid);
 		});
 

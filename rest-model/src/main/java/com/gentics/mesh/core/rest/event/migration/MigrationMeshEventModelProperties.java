@@ -3,7 +3,6 @@ package com.gentics.mesh.core.rest.event.migration;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonUnwrapped;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.gentics.mesh.core.rest.MeshEvent;
 import com.gentics.mesh.core.rest.admin.migration.MigrationStatus;
 import com.gentics.mesh.core.rest.branch.BranchReference;
@@ -11,28 +10,24 @@ import com.gentics.mesh.core.rest.event.EventCauseInfo;
 import com.gentics.mesh.core.rest.event.MeshProjectElementEventModel;
 import com.gentics.mesh.core.rest.event.ProjectElementEventModel;
 import com.gentics.mesh.core.rest.project.ProjectReference;
-import com.gentics.mesh.core.rest.schema.MicroschemaReference;
-import com.gentics.mesh.core.rest.schema.impl.MicroschemaReferenceImpl;
 
-public class MicroschemaMigrationMeshEventModel implements MeshProjectElementEventModel {
+public class MigrationMeshEventModelProperties implements MeshProjectElementEventModel {
 
 	@JsonUnwrapped
-	private final MigrationMeshEventModelProperties baseProperties;
+	private final ProjectElementEventModel baseProperties;
 
 	@JsonProperty(required = true)
-	@JsonPropertyDescription("Reference to the source microschema version.")
-	@JsonDeserialize(as = MicroschemaReferenceImpl.class)
-	private MicroschemaReference fromVersion;
+	@JsonPropertyDescription("Branch to which the migration applies.")
+	private BranchReference branch;
 
 	@JsonProperty(required = true)
-	@JsonPropertyDescription("Reference to the target microschema version.")
-	@JsonDeserialize(as = MicroschemaReferenceImpl.class)
-	private MicroschemaReference toVersion;
+	@JsonPropertyDescription("Status of the migration at the time when the event was send.")
+	private MigrationStatus status;
 
-	public MicroschemaMigrationMeshEventModel(MigrationMeshEventModelProperties baseProperties, MicroschemaReference fromVersion, MicroschemaReference toVersion) {
+	public MigrationMeshEventModelProperties(ProjectElementEventModel baseProperties, BranchReference branch, MigrationStatus status) {
 		this.baseProperties = baseProperties;
-		this.fromVersion = fromVersion;
-		this.toVersion = toVersion;
+		this.branch = branch;
+		this.status = status;
 	}
 
 	@Override
@@ -85,35 +80,40 @@ public class MicroschemaMigrationMeshEventModel implements MeshProjectElementEve
 		baseProperties.setProject(project);
 	}
 
+	/**
+	 * Return the referenced branch.
+	 * 
+	 * @return
+	 */
 	public BranchReference getBranch() {
-		return baseProperties.getBranch();
+		return branch;
 	}
 
+	/**
+	 * Set the referenced branch.
+	 * 
+	 * @param branch
+	 */
 	public void setBranch(BranchReference branch) {
-		baseProperties.setBranch(branch);
+		this.branch = branch;
 	}
 
+	/**
+	 * Return the current migration status.
+	 * 
+	 * @return
+	 */
 	public MigrationStatus getStatus() {
-		return baseProperties.getStatus();
+		return status;
 	}
 
+	/**
+	 * Set the migration status.
+	 * 
+	 * @param status
+	 */
 	public void setStatus(MigrationStatus status) {
-		baseProperties.setStatus(status);
+		this.status = status;
 	}
 
-	public MicroschemaReference getFromVersion() {
-		return fromVersion;
-	}
-
-	public void setFromVersion(MicroschemaReference fromVersion) {
-		this.fromVersion = fromVersion;
-	}
-
-	public MicroschemaReference getToVersion() {
-		return toVersion;
-	}
-
-	public void setToVersion(MicroschemaReference toVersion) {
-		this.toVersion = toVersion;
-	}
 }

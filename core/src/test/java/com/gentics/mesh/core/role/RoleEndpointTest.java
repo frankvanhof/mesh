@@ -1,5 +1,36 @@
 package com.gentics.mesh.core.role;
 
+import com.fasterxml.jackson.core.JsonGenerationException;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.gentics.mesh.core.data.Group;
+import com.gentics.mesh.core.data.Role;
+import com.gentics.mesh.core.data.relationship.GraphPermission;
+import com.gentics.mesh.core.data.root.RoleRoot;
+import com.gentics.mesh.core.rest.common.GenericMessageResponse;
+import com.gentics.mesh.core.rest.common.Permission;
+import com.gentics.mesh.core.rest.error.GenericRestException;
+import com.gentics.mesh.core.rest.event.MeshElementEventModel;
+import com.gentics.mesh.core.rest.role.RoleCreateRequest;
+import com.gentics.mesh.core.rest.role.RoleListResponse;
+import com.gentics.mesh.core.rest.role.RoleResponse;
+import com.gentics.mesh.core.rest.role.RoleUpdateRequest;
+import com.gentics.mesh.dagger.MeshInternal;
+import com.gentics.mesh.parameter.impl.PagingParametersImpl;
+import com.gentics.mesh.parameter.impl.RolePermissionParametersImpl;
+import com.gentics.mesh.test.context.AbstractMeshTest;
+import com.gentics.mesh.test.context.MeshTestSetting;
+import com.gentics.mesh.test.definition.BasicRestTestcases;
+import com.gentics.mesh.util.UUIDUtil;
+import com.syncleus.ferma.tx.Tx;
+import io.reactivex.Single;
+import org.junit.Ignore;
+import org.junit.Test;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+
 import static com.gentics.mesh.assertj.MeshAssertions.assertThat;
 import static com.gentics.mesh.core.data.relationship.GraphPermission.CREATE_PERM;
 import static com.gentics.mesh.core.data.relationship.GraphPermission.DELETE_PERM;
@@ -22,39 +53,6 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Collectors;
-
-import org.junit.Ignore;
-import org.junit.Test;
-
-import com.fasterxml.jackson.core.JsonGenerationException;
-import com.fasterxml.jackson.databind.JsonMappingException;
-import com.gentics.mesh.core.data.Group;
-import com.gentics.mesh.core.data.Role;
-import com.gentics.mesh.core.data.relationship.GraphPermission;
-import com.gentics.mesh.core.data.root.RoleRoot;
-import com.gentics.mesh.core.rest.common.GenericMessageResponse;
-import com.gentics.mesh.core.rest.common.Permission;
-import com.gentics.mesh.core.rest.error.GenericRestException;
-import com.gentics.mesh.core.rest.event.impl.MeshElementEventModelImpl;
-import com.gentics.mesh.core.rest.role.RoleCreateRequest;
-import com.gentics.mesh.core.rest.role.RoleListResponse;
-import com.gentics.mesh.core.rest.role.RoleResponse;
-import com.gentics.mesh.core.rest.role.RoleUpdateRequest;
-import com.gentics.mesh.dagger.MeshInternal;
-import com.gentics.mesh.parameter.impl.PagingParametersImpl;
-import com.gentics.mesh.parameter.impl.RolePermissionParametersImpl;
-import com.gentics.mesh.test.context.AbstractMeshTest;
-import com.gentics.mesh.test.context.MeshTestSetting;
-import com.gentics.mesh.test.definition.BasicRestTestcases;
-import com.gentics.mesh.util.UUIDUtil;
-import com.syncleus.ferma.tx.Tx;
-
-import io.reactivex.Single;
-
 @MeshTestSetting(useElasticsearch = false, testSize = PROJECT, startServer = true)
 public class RoleEndpointTest extends AbstractMeshTest implements BasicRestTestcases {
 
@@ -64,7 +62,7 @@ public class RoleEndpointTest extends AbstractMeshTest implements BasicRestTestc
 		RoleCreateRequest request = new RoleCreateRequest();
 		request.setName("new_role");
 
-		expect(ROLE_CREATED).match(1, MeshElementEventModelImpl.class, event -> {
+		expect(ROLE_CREATED).match(1, MeshElementEventModel.class, event -> {
 			assertThat(event).hasName("new_role").uuidNotNull();
 		}).total(1);
 		expect(ROLE_UPDATED).total(0);
@@ -340,7 +338,7 @@ public class RoleEndpointTest extends AbstractMeshTest implements BasicRestTestc
 			return extraRole.getUuid();
 		});
 
-		expect(ROLE_UPDATED).match(1, MeshElementEventModelImpl.class, event -> {
+		expect(ROLE_UPDATED).match(1, MeshElementEventModel.class, event -> {
 			assertThat(event).hasName("renamed role").hasUuid(extraRoleUuid);
 		}).total(1);
 		expect(ROLE_CREATED).total(0);
@@ -436,7 +434,7 @@ public class RoleEndpointTest extends AbstractMeshTest implements BasicRestTestc
 			return extraRole.getUuid();
 		});
 
-		expect(ROLE_DELETED).match(1, MeshElementEventModelImpl.class, event -> {
+		expect(ROLE_DELETED).match(1, MeshElementEventModel.class, event -> {
 			assertThat(event).hasName("extra role").hasUuid(extraRoleUuid);
 		});
 

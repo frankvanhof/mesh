@@ -24,6 +24,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
 
+import com.gentics.mesh.core.rest.event.MeshElementEventModel;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -31,7 +32,6 @@ import com.gentics.mesh.FieldUtil;
 import com.gentics.mesh.core.data.schema.MicroschemaContainer;
 import com.gentics.mesh.core.rest.common.Permission;
 import com.gentics.mesh.core.rest.error.GenericRestException;
-import com.gentics.mesh.core.rest.event.impl.MeshElementEventModelImpl;
 import com.gentics.mesh.core.rest.micronode.MicronodeResponse;
 import com.gentics.mesh.core.rest.microschema.impl.MicroschemaCreateRequest;
 import com.gentics.mesh.core.rest.microschema.impl.MicroschemaResponse;
@@ -122,7 +122,7 @@ public class MicroschemaEndpointTest extends AbstractMeshTest implements BasicRe
 		request.setName("new_microschema_name");
 		request.setDescription("microschema description");
 
-		expect(MICROSCHEMA_CREATED).match(1, MeshElementEventModelImpl.class, event -> {
+		expect(MICROSCHEMA_CREATED).match(1, MeshElementEventModel.class, event -> {
 			assertThat(event).hasName("new_microschema_name").uuidNotNull();
 		}).one();
 
@@ -318,7 +318,7 @@ public class MicroschemaEndpointTest extends AbstractMeshTest implements BasicRe
 	public void testDeleteByUUID() throws Exception {
 		String uuid = tx(() -> microschemaContainer("vcard").getUuid());
 
-		expect(MICROSCHEMA_DELETED).match(1, MeshElementEventModelImpl.class, event -> {
+		expect(MICROSCHEMA_DELETED).match(1, MeshElementEventModel.class, event -> {
 			assertThat(event).hasName("vcard").hasUuid(uuid);
 		}).one();
 

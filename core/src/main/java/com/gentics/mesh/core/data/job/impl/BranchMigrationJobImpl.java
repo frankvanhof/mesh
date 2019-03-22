@@ -12,14 +12,15 @@ import com.gentics.mesh.Mesh;
 import com.gentics.mesh.context.BranchMigrationContext;
 import com.gentics.mesh.context.impl.BranchMigrationContextImpl;
 import com.gentics.mesh.core.data.Branch;
-import com.gentics.mesh.core.data.Project;
 import com.gentics.mesh.core.data.generic.MeshVertexImpl;
 import com.gentics.mesh.core.endpoint.migration.branch.BranchMigrationHandler;
 import com.gentics.mesh.core.endpoint.migration.impl.MigrationStatusHandlerImpl;
 import com.gentics.mesh.core.rest.MeshEvent;
 import com.gentics.mesh.core.rest.admin.migration.MigrationStatus;
 import com.gentics.mesh.core.rest.admin.migration.MigrationType;
+import com.gentics.mesh.core.rest.event.ProjectElementEventModel;
 import com.gentics.mesh.core.rest.event.migration.BranchMigrationMeshEventModel;
+import com.gentics.mesh.core.rest.event.migration.MigrationMeshEventModelProperties;
 import com.gentics.mesh.core.rest.event.node.BranchMigrationCause;
 import com.gentics.mesh.dagger.DB;
 import com.gentics.mesh.dagger.MeshInternal;
@@ -45,18 +46,16 @@ public class BranchMigrationJobImpl extends JobImpl {
 	}
 
 	public BranchMigrationMeshEventModel createEvent(MeshEvent event, MigrationStatus status) {
-		BranchMigrationMeshEventModel model = new BranchMigrationMeshEventModel();
-		model.setEvent(event);
-
-		Branch newBranch = getBranch();
-		model.setBranch(newBranch.transformToReference());
-
-		Project project = newBranch.getProject();
-		model.setProject(project.transformToReference());
-
-		model.setStatus(status);
-		model.setOrigin(Mesh.mesh().getOptions().getNodeName());
-		return model;
+		Branch branch = getBranch();
+		ProjectElementEventModel projectProperties = new ProjectElementEventModel(
+			createSimpleEventModel(event),
+			branch.getProject().transformToReference()
+		);
+		return new BranchMigrationMeshEventModel(new MigrationMeshEventModelProperties(
+			projectProperties,
+			branch.transformToReference(),
+			status
+		));
 	}
 
 	private BranchMigrationContext prepareContext() {
@@ -85,10 +84,10 @@ public class BranchMigrationJobImpl extends JobImpl {
 				}
 				context.setOldBranch(oldBranch);
 
-				BranchMigrationCause cause = new BranchMigrationCause();
-				cause.setProject(newBranch.getProject().transformToReference());
-				cause.setOrigin(Mesh.mesh().getOptions().getNodeName());
-				cause.setUuid(getUuid());
+				BranchMigrationCause cause = new BranchMigrationCause(
+					getUuid(),
+					newBranch.getProject().transformToReference()
+				);
 				context.setCause(cause);
 
 				context.getStatus().commit();

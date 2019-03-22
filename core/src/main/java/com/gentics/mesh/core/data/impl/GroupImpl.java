@@ -31,6 +31,8 @@ import com.gentics.mesh.core.data.generic.MeshVertexImpl;
 import com.gentics.mesh.core.data.page.TransformablePage;
 import com.gentics.mesh.core.data.page.impl.DynamicTransformablePageImpl;
 import com.gentics.mesh.core.data.relationship.GraphPermission;
+import com.gentics.mesh.core.rest.MeshEvent;
+import com.gentics.mesh.core.rest.event.MeshEventModelProperties;
 import com.gentics.mesh.core.rest.event.group.GroupRoleAssignModel;
 import com.gentics.mesh.core.rest.event.group.GroupUserAssignModel;
 import com.gentics.mesh.core.rest.group.GroupReference;
@@ -262,34 +264,26 @@ public class GroupImpl extends AbstractMeshCoreVertex<GroupResponse, Group> impl
 
 	@Override
 	public GroupRoleAssignModel createRoleAssignmentEvent(Role role, Assignment assignment) {
-		GroupRoleAssignModel model = new GroupRoleAssignModel();
-		model.setGroup(transformToReference());
-		model.setRole(role.transformToReference());
-		switch (assignment) {
-		case ASSIGNED:
-			model.setEvent(GROUP_ROLE_ASSIGNED);
-			break;
-		case UNASSIGNED:
-			model.setEvent(GROUP_ROLE_UNASSIGNED);
-			break;
-		}
-		return model;
+		MeshEvent event = assignment == Assignment.ASSIGNED
+			? GROUP_ROLE_ASSIGNED
+			: GROUP_ROLE_UNASSIGNED;
+		return new GroupRoleAssignModel(
+			MeshEventModelProperties.fromCurrentNode(event),
+			transformToReference(),
+			role.transformToReference()
+		);
 	}
 
 	@Override
 	public GroupUserAssignModel createUserAssignmentEvent(User user, Assignment assignment) {
-		GroupUserAssignModel model = new GroupUserAssignModel();
-		model.setGroup(transformToReference());
-		model.setUser(user.transformToReference());
-		switch (assignment) {
-		case ASSIGNED:
-			model.setEvent(GROUP_USER_ASSIGNED);
-			break;
-		case UNASSIGNED:
-			model.setEvent(GROUP_USER_UNASSIGNED);
-			break;
-		}
-		return model;
+		MeshEvent event = assignment == Assignment.ASSIGNED
+			? GROUP_USER_ASSIGNED
+			: GROUP_USER_UNASSIGNED;
+		return new GroupUserAssignModel(
+			MeshEventModelProperties.fromCurrentNode(event),
+			transformToReference(),
+			user.transformToReference()
+		);
 	}
 
 }

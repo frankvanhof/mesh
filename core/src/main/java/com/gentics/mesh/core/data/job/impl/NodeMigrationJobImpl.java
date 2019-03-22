@@ -22,6 +22,9 @@ import com.gentics.mesh.core.endpoint.migration.node.NodeMigrationHandler;
 import com.gentics.mesh.core.rest.MeshEvent;
 import com.gentics.mesh.core.rest.admin.migration.MigrationStatus;
 import com.gentics.mesh.core.rest.admin.migration.MigrationType;
+import com.gentics.mesh.core.rest.event.ProjectElementEventModel;
+import com.gentics.mesh.core.rest.event.migration.BranchMigrationMeshEventModel;
+import com.gentics.mesh.core.rest.event.migration.MigrationMeshEventModelProperties;
 import com.gentics.mesh.core.rest.event.migration.SchemaMigrationMeshEventModel;
 import com.gentics.mesh.core.rest.event.node.SchemaMigrationCause;
 import com.gentics.mesh.core.rest.job.JobWarningList;
@@ -52,23 +55,11 @@ public class NodeMigrationJobImpl extends JobImpl {
 	}
 
 	private SchemaMigrationMeshEventModel createEvent(MeshEvent event, MigrationStatus status) {
-		SchemaMigrationMeshEventModel model = new SchemaMigrationMeshEventModel();
-		model.setEvent(event);
-
-		SchemaContainerVersion toVersion = getToSchemaVersion();
-		model.setToVersion(toVersion.transformToReference());
-
-		SchemaContainerVersion fromVersion = getFromSchemaVersion();
-		model.setFromVersion(fromVersion.transformToReference());
-
-		Branch branch = getBranch();
-		Project project = branch.getProject();
-		model.setProject(project.transformToReference());
-		model.setBranch(branch.transformToReference());
-
-		model.setOrigin(Mesh.mesh().getOptions().getNodeName());
-		model.setStatus(status);
-		return model;
+		return new SchemaMigrationMeshEventModel(
+			createMigrationEventModel(event, status),
+			getFromSchemaVersion().transformToReference(),
+			getToSchemaVersion().transformToReference()
+		);
 	}
 
 	private NodeMigrationActionContextImpl prepareContext() {
@@ -114,13 +105,7 @@ public class NodeMigrationJobImpl extends JobImpl {
 					+ fromContainerVersion.getUuid() + "} to version {" + toContainerVersion.getUuid() + "} for release {" + branch.getUuid()
 					+ "} in project {" + project.getUuid() + "}");
 
-				SchemaMigrationCause cause = new SchemaMigrationCause();
-				cause.setFromVersion(fromContainerVersion.transformToReference());
-				cause.setToVersion(toContainerVersion.transformToReference());
-				cause.setProject(project.transformToReference());
-				cause.setBranch(branch.transformToReference());
-				cause.setOrigin(Mesh.mesh().getOptions().getNodeName());
-				cause.setUuid(getUuid());
+				SchemaMigrationCause cause = new SchemaMigrationCause(createEvent(SCHEMA_MIGRATION_START, STARTING));
 				context.setCause(cause);
 
 				context.getStatus().commit();

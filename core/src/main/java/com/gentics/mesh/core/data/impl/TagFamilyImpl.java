@@ -32,6 +32,7 @@ import com.gentics.mesh.core.data.relationship.GraphPermission;
 import com.gentics.mesh.core.data.root.TagFamilyRoot;
 import com.gentics.mesh.core.data.root.impl.TagFamilyRootImpl;
 import com.gentics.mesh.core.rest.MeshEvent;
+import com.gentics.mesh.core.rest.event.ProjectElementEventModel;
 import com.gentics.mesh.core.rest.event.tagfamily.TagFamilyMeshEventModel;
 import com.gentics.mesh.core.rest.project.ProjectReference;
 import com.gentics.mesh.core.rest.tag.TagCreateRequest;
@@ -308,31 +309,11 @@ public class TagFamilyImpl extends AbstractMeshCoreVertex<TagFamilyResponse, Tag
 	}
 
 	@Override
-	public TagFamilyMeshEventModel onCreated() {
-		return createEvent(getTypeInfo().getOnCreated());
-	}
-
-	@Override
-	public TagFamilyMeshEventModel onUpdated() {
-		return createEvent(getTypeInfo().getOnUpdated());
-	}
-
-	@Override
-	public TagFamilyMeshEventModel onDeleted() {
-		return createEvent(getTypeInfo().getOnDeleted());
-	}
-
-	private TagFamilyMeshEventModel createEvent(MeshEvent type) {
-		TagFamilyMeshEventModel event = new TagFamilyMeshEventModel();
-		event.setEvent(type);
-		fillEventInfo(event);
-
-		// .project
-		Project project = getProject();
-		ProjectReference reference = project.transformToReference();
-		event.setProject(reference);
-
-		return event;
+	protected TagFamilyMeshEventModel createEvent(MeshEvent type) {
+		return new TagFamilyMeshEventModel(new ProjectElementEventModel(
+			createSimpleEventModel(type),
+			getProject().transformToReference()
+		));
 	}
 
 }

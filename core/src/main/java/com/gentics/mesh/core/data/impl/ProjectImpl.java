@@ -47,7 +47,10 @@ import com.gentics.mesh.core.data.root.impl.TagFamilyRootImpl;
 import com.gentics.mesh.core.data.schema.MicroschemaContainer;
 import com.gentics.mesh.core.data.schema.SchemaContainer;
 import com.gentics.mesh.core.data.schema.SchemaContainerVersion;
+import com.gentics.mesh.core.rest.MeshEvent;
 import com.gentics.mesh.core.rest.event.MeshElementEventModel;
+import com.gentics.mesh.core.rest.event.MeshEventModelProperties;
+import com.gentics.mesh.core.rest.event.ProjectEventModelProperties;
 import com.gentics.mesh.core.rest.event.project.ProjectMicroschemaEventModel;
 import com.gentics.mesh.core.rest.event.project.ProjectSchemaEventModel;
 import com.gentics.mesh.core.rest.project.ProjectReference;
@@ -333,34 +336,28 @@ public class ProjectImpl extends AbstractMeshCoreVertex<ProjectResponse, Project
 
 	@Override
 	public ProjectSchemaEventModel onSchemaAssignEvent(SchemaContainer schema, Assignment assigned) {
-		ProjectSchemaEventModel model = new ProjectSchemaEventModel();
-		switch (assigned) {
-		case ASSIGNED:
-			model.setEvent(PROJECT_SCHEMA_ASSIGNED);
-			break;
-		case UNASSIGNED:
-			model.setEvent(PROJECT_SCHEMA_UNASSIGNED);
-			break;
-		}
-		model.setProject(transformToReference());
-		model.setSchema(schema.transformToReference());
-		return model;
+		MeshEvent event = assigned == Assignment.ASSIGNED
+			? PROJECT_SCHEMA_ASSIGNED
+			: PROJECT_SCHEMA_UNASSIGNED;
+		return new ProjectSchemaEventModel(
+			createProjectEventModel(event),
+			schema.transformToReference()
+		);
 	}
 
 	@Override
 	public ProjectMicroschemaEventModel onMicroschemaAssignEvent(MicroschemaContainer microschema, Assignment assigned) {
-		ProjectMicroschemaEventModel model = new ProjectMicroschemaEventModel();
-		switch (assigned) {
-		case ASSIGNED:
-			model.setEvent(PROJECT_MICROSCHEMA_ASSIGNED);
-			break;
-		case UNASSIGNED:
-			model.setEvent(PROJECT_MICROSCHEMA_UNASSIGNED);
-			break;
-		}
-		model.setProject(transformToReference());
-		model.setMicroschema(microschema.transformToReference());
-		return model;
+		MeshEvent event = assigned == Assignment.ASSIGNED
+			? PROJECT_MICROSCHEMA_ASSIGNED
+			: PROJECT_MICROSCHEMA_UNASSIGNED;
+		return new ProjectMicroschemaEventModel(
+			createProjectEventModel(event),
+			microschema.transformToReference()
+		);
+	}
+
+	private ProjectEventModelProperties createProjectEventModel(MeshEvent event) {
+		return new ProjectEventModelProperties(MeshEventModelProperties.fromCurrentNode(event), transformToReference());
 	}
 
 }

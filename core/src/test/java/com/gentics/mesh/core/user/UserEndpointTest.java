@@ -43,6 +43,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.gentics.mesh.core.rest.event.MeshElementEventModel;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -58,7 +59,6 @@ import com.gentics.mesh.core.data.root.UserRoot;
 import com.gentics.mesh.core.rest.common.ListResponse;
 import com.gentics.mesh.core.rest.common.Permission;
 import com.gentics.mesh.core.rest.error.GenericRestException;
-import com.gentics.mesh.core.rest.event.impl.MeshElementEventModelImpl;
 import com.gentics.mesh.core.rest.node.NodeResponse;
 import com.gentics.mesh.core.rest.user.NodeReference;
 import com.gentics.mesh.core.rest.user.UserAPITokenResponse;
@@ -528,7 +528,7 @@ public class UserEndpointTest extends AbstractMeshTest implements BasicRestTestc
 		updateRequest.setLastname("Epic Stark");
 		updateRequest.setUsername(newName);
 
-		expect(USER_UPDATED).match(1, MeshElementEventModelImpl.class, event -> {
+		expect(USER_UPDATED).match(1, MeshElementEventModel.class, event -> {
 			assertThat(event).hasName(newName).hasUuid(uuid);
 		}).total(1);
 
@@ -653,7 +653,7 @@ public class UserEndpointTest extends AbstractMeshTest implements BasicRestTestc
 		newUser.setGroupUuid(groupUuid());
 		newUser.setPassword("test1234");
 
-		expect(USER_CREATED).match(1, MeshElementEventModelImpl.class, event -> {
+		expect(USER_CREATED).match(1, MeshElementEventModel.class, event -> {
 			assertThat(event).hasName("new_user").uuidNotNull();
 		});
 
@@ -1250,7 +1250,7 @@ public class UserEndpointTest extends AbstractMeshTest implements BasicRestTestc
 			assertTrue(restUser.getEnabled());
 			String uuid = restUser.getUuid();
 
-			expect(USER_DELETED).match(1, MeshElementEventModelImpl.class, event -> {
+			expect(USER_DELETED).match(1, MeshElementEventModel.class, event -> {
 				assertThat(event).hasName("new_user").hasUuid(uuid);
 			});
 

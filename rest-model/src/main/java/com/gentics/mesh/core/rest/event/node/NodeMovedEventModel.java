@@ -2,21 +2,50 @@ package com.gentics.mesh.core.rest.event.node;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
-import com.gentics.mesh.core.rest.event.AbstractMeshEventModel;
+import com.fasterxml.jackson.annotation.JsonUnwrapped;
+import com.gentics.mesh.core.rest.MeshEvent;
+import com.gentics.mesh.core.rest.event.EventCauseInfo;
+import com.gentics.mesh.core.rest.event.MeshEventModel;
+import com.gentics.mesh.core.rest.event.MeshEventModelProperties;
 import com.gentics.mesh.core.rest.user.NodeReference;
 
-public class NodeMovedEventModel extends AbstractMeshEventModel {
+public class NodeMovedEventModel implements MeshEventModel {
+
+	@JsonUnwrapped
+	private final MeshEventModelProperties baseProperties;
 
 	@JsonProperty(required = true)
 	@JsonPropertyDescription("Reference of the source node which was moved.")
-	NodeReference source;
+	private NodeReference source;
 
 	@JsonProperty(required = true)
 	@JsonPropertyDescription("Reference of the target node into which the source node was moved.")
-	NodeReference target;
+	private NodeReference target;
 
-	public NodeMovedEventModel() {
+	public NodeMovedEventModel(MeshEventModelProperties baseProperties, NodeReference source, NodeReference target) {
+		this.baseProperties = baseProperties;
+		this.source = source;
+		this.target = target;
+	}
 
+	@Override
+	public String getOrigin() {
+		return baseProperties.getOrigin();
+	}
+
+	@Override
+	public MeshEvent getEvent() {
+		return baseProperties.getEvent();
+	}
+
+	@Override
+	public EventCauseInfo getCause() {
+		return baseProperties.getCause();
+	}
+
+	@Override
+	public void setCause(EventCauseInfo cause) {
+		baseProperties.setCause(cause);
 	}
 
 	public NodeReference getSource() {

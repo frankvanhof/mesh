@@ -9,6 +9,9 @@ import static com.gentics.mesh.core.rest.admin.migration.MigrationStatus.UNKNOWN
 
 import java.util.Map;
 
+import com.gentics.mesh.core.rest.MeshEvent;
+import com.gentics.mesh.core.rest.event.ProjectElementEventModel;
+import com.gentics.mesh.core.rest.event.migration.MigrationMeshEventModelProperties;
 import org.apache.commons.lang.NotImplementedException;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 
@@ -342,4 +345,18 @@ public abstract class JobImpl extends AbstractMeshCoreVertex<JobResponse, Job> i
 		property(NODE_NAME_PROPERTY_KEY, nodeName);
 	}
 
+	protected MigrationMeshEventModelProperties createMigrationEventModel(MeshEvent event, MigrationStatus status) {
+		return new MigrationMeshEventModelProperties(
+			createProjectEventModel(event),
+			getBranch().transformToReference(),
+			status
+		);
+	}
+
+	private ProjectElementEventModel createProjectEventModel(MeshEvent event) {
+		return new ProjectElementEventModel(
+			createSimpleEventModel(event),
+			getBranch().getProject().transformToReference()
+		);
+	}
 }

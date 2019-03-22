@@ -35,6 +35,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.gentics.mesh.core.rest.event.MeshElementEventModel;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -42,7 +43,6 @@ import com.gentics.mesh.core.data.Group;
 import com.gentics.mesh.core.data.User;
 import com.gentics.mesh.core.data.root.GroupRoot;
 import com.gentics.mesh.core.rest.error.GenericRestException;
-import com.gentics.mesh.core.rest.event.impl.MeshElementEventModelImpl;
 import com.gentics.mesh.core.rest.group.GroupCreateRequest;
 import com.gentics.mesh.core.rest.group.GroupListResponse;
 import com.gentics.mesh.core.rest.group.GroupResponse;
@@ -67,7 +67,7 @@ public class GroupEndpointTest extends AbstractMeshTest implements BasicRestTest
 		GroupCreateRequest request = new GroupCreateRequest();
 		request.setName("test12345");
 
-		expect(GROUP_CREATED).match(1, MeshElementEventModelImpl.class, event -> {
+		expect(GROUP_CREATED).match(1, MeshElementEventModel.class, event -> {
 			assertThat(event).hasName("test12345").uuidNotNull();
 		});
 
@@ -333,7 +333,7 @@ public class GroupEndpointTest extends AbstractMeshTest implements BasicRestTest
 		GroupUpdateRequest request = new GroupUpdateRequest();
 		request.setName(name);
 
-		expect(GROUP_UPDATED).match(1, MeshElementEventModelImpl.class, event -> {
+		expect(GROUP_UPDATED).match(1, MeshElementEventModel.class, event -> {
 			assertThat(event).hasName(name).hasUuid(groupUuid);
 		});
 
@@ -455,7 +455,7 @@ public class GroupEndpointTest extends AbstractMeshTest implements BasicRestTest
 		String name = tx(() -> group().getName());
 		String uuid = groupUuid();
 
-		expect(GROUP_DELETED).match(1, MeshElementEventModelImpl.class, event -> {
+		expect(GROUP_DELETED).match(1, MeshElementEventModel.class, event -> {
 			assertThat(event).hasName(name).hasUuid(uuid);
 		});
 

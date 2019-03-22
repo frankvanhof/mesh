@@ -59,12 +59,15 @@ import com.gentics.mesh.core.rest.branch.BranchReference;
 import com.gentics.mesh.core.rest.branch.BranchResponse;
 import com.gentics.mesh.core.rest.branch.BranchUpdateRequest;
 import com.gentics.mesh.core.rest.common.NameUuidReference;
+import com.gentics.mesh.core.rest.event.MeshEventModelProperties;
+import com.gentics.mesh.core.rest.event.ProjectElementEventModel;
+import com.gentics.mesh.core.rest.event.ProjectEventModelProperties;
+import com.gentics.mesh.core.rest.event.branch.BranchAssignEventProperties;
 import com.gentics.mesh.core.rest.event.branch.BranchMeshEventModel;
 import com.gentics.mesh.core.rest.event.branch.BranchMicroschemaAssignModel;
 import com.gentics.mesh.core.rest.event.branch.BranchSchemaAssignEventModel;
 import com.gentics.mesh.core.rest.event.branch.BranchTaggedEventModel;
 import com.gentics.mesh.core.rest.event.project.ProjectBranchEventModel;
-import com.gentics.mesh.core.rest.project.ProjectReference;
 import com.gentics.mesh.core.rest.schema.FieldSchemaContainer;
 import com.gentics.mesh.dagger.DB;
 import com.gentics.mesh.dagger.MeshInternal;
@@ -423,26 +426,29 @@ public class BranchImpl extends AbstractMeshCoreVertex<BranchResponse, Branch> i
 	}
 
 	private BranchSchemaAssignEventModel createSchemaAssignEvent(SchemaContainerVersion schemaContainerVersion, MigrationStatus status) {
-		BranchSchemaAssignEventModel model = new BranchSchemaAssignEventModel();
-		model.setOrigin(Mesh.mesh().getOptions().getNodeName());
-		model.setEvent(MeshEvent.SCHEMA_BRANCH_ASSIGN);
-		model.setSchema(schemaContainerVersion.transformToReference());
-		model.setStatus(status);
-		model.setBranch(transformToReference());
-		model.setProject(getProject().transformToReference());
-		return model;
+		return new BranchSchemaAssignEventModel(new BranchAssignEventProperties<>(
+			createProjectEvent(MeshEvent.SCHEMA_BRANCH_ASSIGN),
+			transformToReference(),
+			schemaContainerVersion.transformToReference(),
+			status
+		));
+	}
+
+	private ProjectEventModelProperties createProjectEvent(MeshEvent event) {
+		return new ProjectEventModelProperties(new MeshEventModelProperties(
+			Mesh.mesh().getOptions().getNodeName(),
+			event
+		), getProject().transformToReference());
 	}
 
 	private BranchMicroschemaAssignModel createMicroschemaAssignEvent(MicroschemaContainerVersion microschemaContainerVersion,
 		MigrationStatus status) {
-		BranchMicroschemaAssignModel model = new BranchMicroschemaAssignModel();
-		model.setOrigin(Mesh.mesh().getOptions().getNodeName());
-		model.setEvent(MeshEvent.MICROSCHEMA_BRANCH_ASSIGN);
-		model.setSchema(microschemaContainerVersion.transformToReference());
-		model.setStatus(status);
-		model.setBranch(transformToReference());
-		model.setProject(getProject().transformToReference());
-		return model;
+		return new BranchMicroschemaAssignModel(new BranchAssignEventProperties<>(
+			createProjectEvent(MeshEvent.MICROSCHEMA_BRANCH_ASSIGN),
+			transformToReference(),
+			microschemaContainerVersion.transformToReference(),
+			status
+		));
 	}
 
 	@Override
@@ -557,59 +563,32 @@ public class BranchImpl extends AbstractMeshCoreVertex<BranchResponse, Branch> i
 	}
 
 	@Override
-	public BranchMeshEventModel onUpdated() {
-		return createEvent(getTypeInfo().getOnUpdated());
-	}
-
-	@Override
-	public BranchMeshEventModel onDeleted() {
-		return createEvent(getTypeInfo().getOnDeleted());
-	}
-
-	private BranchMeshEventModel createEvent(MeshEvent event) {
-		BranchMeshEventModel model = new BranchMeshEventModel();
-		model.setEvent(event);
-		fillEventInfo(model);
-
-		// .project
-		Project project = getProject();
-		ProjectReference reference = project.transformToReference();
-		model.setProject(reference);
-
-		return model;
+	protected BranchMeshEventModel createEvent(MeshEvent event) {
+		return new BranchMeshEventModel(new ProjectElementEventModel(
+			createSimpleEventModel(event),
+			getProject().transformToReference()
+		));
 	}
 
 	@Override
 	public ProjectBranchEventModel onSetLatest() {
-		ProjectBranchEventModel model = new ProjectBranchEventModel();
-		model.setEvent(PROJECT_LATEST_BRANCH_UPDATED);
-
-		// .project
-		Project project = getProject();
-		ProjectReference reference = project.transformToReference();
-		model.setProject(reference);
-
-		fillEventInfo(model);
-		return model;
-
+		return new ProjectBranchEventModel(new ProjectElementEventModel(
+			createSimpleEventModel(PROJECT_LATEST_BRANCH_UPDATED),
+			getProject().transformToReference()
+		));
 	}
 
 	@Override
 	public BranchTaggedEventModel onTagged(Tag tag, Assignment assignment) {
-		BranchTaggedEventModel model = new BranchTaggedEventModel();
-		model.setTag(tag.transformToReference());
-		model.setBranch(transformToReference());
-		model.setProject(getProject().transformToReference());
-		switch (assignment) {
-		case ASSIGNED:
-			model.setEvent(BRANCH_TAGGED);
-			break;
-		case UNASSIGNED:
-			model.setEvent(BRANCH_UNTAGGED);
-			break;
-		}
+		MeshEvent event = assignment == ASSIGNED
+			? BRANCH_TAGGED
+			: BRANCH_UNTAGGED;
 
-		return model;
+		return new BranchTaggedEventModel(
+			createProjectEvent(event),
+			transformToReference(),
+			tag.transformToReference()
+		);
 	}
 
 	@Override

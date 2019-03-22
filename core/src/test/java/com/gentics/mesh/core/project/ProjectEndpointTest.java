@@ -42,6 +42,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.StreamSupport;
 
+import com.gentics.mesh.core.rest.event.MeshElementEventModel;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -61,7 +62,6 @@ import com.gentics.mesh.core.rest.branch.BranchUpdateRequest;
 import com.gentics.mesh.core.rest.common.Permission;
 import com.gentics.mesh.core.rest.common.PermissionInfo;
 import com.gentics.mesh.core.rest.error.GenericRestException;
-import com.gentics.mesh.core.rest.event.impl.MeshElementEventModelImpl;
 import com.gentics.mesh.core.rest.event.node.NodeMeshEventModel;
 import com.gentics.mesh.core.rest.node.NodeResponse;
 import com.gentics.mesh.core.rest.node.NodeUpdateRequest;
@@ -147,7 +147,7 @@ public class ProjectEndpointTest extends AbstractMeshTest implements BasicRestTe
 		request.setName(name);
 		request.setSchema(new SchemaReferenceImpl().setName("folder"));
 
-		expect(PROJECT_CREATED).match(1, MeshElementEventModelImpl.class, event -> {
+		expect(PROJECT_CREATED).match(1, MeshElementEventModel.class, event -> {
 			assertThat(event).hasName(name).uuidNotNull();
 		});
 
@@ -530,7 +530,7 @@ public class ProjectEndpointTest extends AbstractMeshTest implements BasicRestTe
 		request.setName(newName);
 		assertThat(trackingSearchProvider()).hasNoStoreEvents();
 
-		expect(PROJECT_UPDATED).match(1, MeshElementEventModelImpl.class, event -> {
+		expect(PROJECT_UPDATED).match(1, MeshElementEventModel.class, event -> {
 			assertThat(event).hasName(newName).uuidNotNull();
 		});
 
@@ -635,7 +635,7 @@ public class ProjectEndpointTest extends AbstractMeshTest implements BasicRestTe
 		String baseNodeUuid = tx(() -> project().getBaseNode().getUuid());
 		System.out.println("BASE:" + baseNodeUuid);
 
-		expect(PROJECT_DELETED).match(1, MeshElementEventModelImpl.class, event -> {
+		expect(PROJECT_DELETED).match(1, MeshElementEventModel.class, event -> {
 			assertThat(event).hasName(PROJECT_NAME).hasUuid(projectUuid());
 		});
 

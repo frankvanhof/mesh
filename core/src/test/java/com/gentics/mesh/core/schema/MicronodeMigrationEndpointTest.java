@@ -9,9 +9,9 @@ import static com.gentics.mesh.test.ClientHelper.call;
 import static com.gentics.mesh.test.TestSize.FULL;
 import static org.junit.Assert.assertEquals;
 
+import com.gentics.mesh.core.rest.event.MeshElementEventModel;
 import org.junit.Test;
 
-import com.gentics.mesh.core.rest.event.impl.MeshElementEventModelImpl;
 import com.gentics.mesh.core.rest.microschema.impl.MicroschemaResponse;
 import com.gentics.mesh.core.rest.microschema.impl.MicroschemaUpdateRequest;
 import com.gentics.mesh.test.context.AbstractMeshTest;
@@ -29,7 +29,7 @@ public class MicronodeMigrationEndpointTest extends AbstractMeshTest {
 		String uuid = tx(() -> microschemaContainer("vcard").getUuid());
 		MicroschemaResponse microschema = call(() -> client().findMicroschemaByUuid(uuid));
 
-		expect(MICROSCHEMA_UPDATED).one().match(1, MeshElementEventModelImpl.class, event -> {
+		expect(MICROSCHEMA_UPDATED).one().match(1, MeshElementEventModel.class, event -> {
 			assertEquals("changed", event.getName());
 			assertEquals(uuid, event.getUuid());
 		});

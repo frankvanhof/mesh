@@ -2,13 +2,21 @@ package com.gentics.mesh.core.rest.event.node;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
+import com.fasterxml.jackson.annotation.JsonUnwrapped;
+import com.gentics.mesh.core.rest.MeshEvent;
 import com.gentics.mesh.core.rest.branch.BranchReference;
-import com.gentics.mesh.core.rest.event.AbstractMeshEventModel;
+import com.gentics.mesh.core.rest.event.EventCauseInfo;
+import com.gentics.mesh.core.rest.event.ProjectElementEventModel;
+import com.gentics.mesh.core.rest.event.ProjectEvent;
+import com.gentics.mesh.core.rest.event.ProjectEventModelProperties;
 import com.gentics.mesh.core.rest.project.ProjectReference;
 import com.gentics.mesh.core.rest.tag.TagReference;
 import com.gentics.mesh.core.rest.user.NodeReference;
 
-public class NodeTaggedEventModel extends AbstractMeshEventModel {
+public class NodeTaggedEventModel implements ProjectEvent {
+
+	@JsonUnwrapped
+	private final ProjectEventModelProperties baseProperties;
 
 	@JsonProperty(required = true)
 	@JsonPropertyDescription("Reference of the tag.")
@@ -22,12 +30,36 @@ public class NodeTaggedEventModel extends AbstractMeshEventModel {
 	@JsonPropertyDescription("Reference to the node that was tagged.")
 	private NodeReference node;
 
-	@JsonProperty(required = true)
-	@JsonPropertyDescription("Reference to the project involved.")
-	private ProjectReference project;
+	public NodeTaggedEventModel(ProjectEventModelProperties baseProperties, TagReference tag, BranchReference branch, NodeReference node) {
+		this.baseProperties = baseProperties;
+		this.tag = tag;
+		this.branch = branch;
+		this.node = node;
+	}
 
-	public NodeTaggedEventModel() {
+	@Override
+	public String getOrigin() {
+		return baseProperties.getOrigin();
+	}
 
+	@Override
+	public MeshEvent getEvent() {
+		return baseProperties.getEvent();
+	}
+
+	@Override
+	public EventCauseInfo getCause() {
+		return baseProperties.getCause();
+	}
+
+	@Override
+	public void setCause(EventCauseInfo cause) {
+		baseProperties.setCause(cause);
+	}
+
+	@Override
+	public ProjectReference getProject() {
+		return baseProperties.getProject();
 	}
 
 	public TagReference getTag() {
@@ -54,12 +86,9 @@ public class NodeTaggedEventModel extends AbstractMeshEventModel {
 		this.node = node;
 	}
 
-	public ProjectReference getProject() {
-		return project;
-	}
-
+	@Override
 	public void setProject(ProjectReference project) {
-		this.project = project;
+		baseProperties.setProject(project);
 	}
 
 }

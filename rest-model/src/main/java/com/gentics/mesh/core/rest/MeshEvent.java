@@ -11,13 +11,13 @@ import java.util.stream.Stream;
 
 import com.gentics.mesh.Mesh;
 import com.gentics.mesh.core.rest.event.MeshEventModel;
+import com.gentics.mesh.core.rest.event.SimpleElementEventModel;
 import com.gentics.mesh.core.rest.event.branch.BranchMeshEventModel;
 import com.gentics.mesh.core.rest.event.branch.BranchMicroschemaAssignModel;
 import com.gentics.mesh.core.rest.event.branch.BranchSchemaAssignEventModel;
 import com.gentics.mesh.core.rest.event.branch.BranchTaggedEventModel;
 import com.gentics.mesh.core.rest.event.group.GroupRoleAssignModel;
 import com.gentics.mesh.core.rest.event.group.GroupUserAssignModel;
-import com.gentics.mesh.core.rest.event.impl.MeshElementEventModelImpl;
 import com.gentics.mesh.core.rest.event.migration.BranchMigrationMeshEventModel;
 import com.gentics.mesh.core.rest.event.migration.MicroschemaMigrationMeshEventModel;
 import com.gentics.mesh.core.rest.event.migration.SchemaMigrationMeshEventModel;
@@ -124,19 +124,19 @@ public enum MeshEvent {
 
 	/* User */
 
-	USER_CREATED("mesh.user.created", MeshElementEventModelImpl.class),
+	USER_CREATED("mesh.user.created", SimpleElementEventModel.class),
 
-	USER_UPDATED("mesh.user.updated", MeshElementEventModelImpl.class),
+	USER_UPDATED("mesh.user.updated", SimpleElementEventModel.class),
 
-	USER_DELETED("mesh.user.deleted", MeshElementEventModelImpl.class),
+	USER_DELETED("mesh.user.deleted", SimpleElementEventModel.class),
 
 	/* Group */
 
-	GROUP_CREATED("mesh.group.created", MeshElementEventModelImpl.class),
+	GROUP_CREATED("mesh.group.created", SimpleElementEventModel.class),
 
-	GROUP_UPDATED("mesh.group.updated", MeshElementEventModelImpl.class),
+	GROUP_UPDATED("mesh.group.updated", SimpleElementEventModel.class),
 
-	GROUP_DELETED("mesh.group.deleted", MeshElementEventModelImpl.class),
+	GROUP_DELETED("mesh.group.deleted", SimpleElementEventModel.class),
 
 	GROUP_USER_ASSIGNED("mesh.group-user.assigned", GroupUserAssignModel.class),
 
@@ -148,11 +148,11 @@ public enum MeshEvent {
 
 	/* Role */
 
-	ROLE_CREATED("mesh.role.created", MeshElementEventModelImpl.class),
+	ROLE_CREATED("mesh.role.created", SimpleElementEventModel.class),
 
-	ROLE_UPDATED("mesh.role.updated", MeshElementEventModelImpl.class),
+	ROLE_UPDATED("mesh.role.updated", SimpleElementEventModel.class),
 
-	ROLE_DELETED("mesh.role.deleted", MeshElementEventModelImpl.class),
+	ROLE_DELETED("mesh.role.deleted", SimpleElementEventModel.class),
 
 	ROLE_PERMISSIONS_CHANGED("mesh.role.permissions.changed", PermissionChangedEventModel.class),
 
@@ -174,11 +174,11 @@ public enum MeshEvent {
 
 	/* Project */
 
-	PROJECT_CREATED("mesh.project.created", MeshElementEventModelImpl.class),
+	PROJECT_CREATED("mesh.project.created", SimpleElementEventModel.class),
 
-	PROJECT_UPDATED("mesh.project.updated", MeshElementEventModelImpl.class),
+	PROJECT_UPDATED("mesh.project.updated", SimpleElementEventModel.class),
 
-	PROJECT_DELETED("mesh.project.deleted", MeshElementEventModelImpl.class),
+	PROJECT_DELETED("mesh.project.deleted", SimpleElementEventModel.class),
 
 	PROJECT_SCHEMA_ASSIGNED("mesh.project-schema.assigned", ProjectSchemaEventModel.class),
 
@@ -206,7 +206,7 @@ public enum MeshEvent {
 
 	NODE_UNPUBLISHED("mesh.node.unpublished", NodeMeshEventModel.class),
 
-	NODE_MOVED("mesh.node.moved", MeshElementEventModelImpl.class),
+	NODE_MOVED("mesh.node.moved", SimpleElementEventModel.class),
 
 	NODE_CONTENT_UPDATED("mesh.node-content.updated", NodeMeshEventModel.class),
 
@@ -216,19 +216,19 @@ public enum MeshEvent {
 
 	/* Schema */
 
-	SCHEMA_CREATED("mesh.schema.created", MeshElementEventModelImpl.class),
+	SCHEMA_CREATED("mesh.schema.created", SimpleElementEventModel.class),
 
-	SCHEMA_UPDATED("mesh.schema.updated", MeshElementEventModelImpl.class),
+	SCHEMA_UPDATED("mesh.schema.updated", SimpleElementEventModel.class),
 
-	SCHEMA_DELETED("mesh.schema.deleted", MeshElementEventModelImpl.class),
+	SCHEMA_DELETED("mesh.schema.deleted", SimpleElementEventModel.class),
 
 	/* Microschema */
 
-	MICROSCHEMA_CREATED("mesh.microschema.created", MeshElementEventModelImpl.class),
+	MICROSCHEMA_CREATED("mesh.microschema.created", SimpleElementEventModel.class),
 
-	MICROSCHEMA_UPDATED("mesh.microschema.updated", MeshElementEventModelImpl.class),
+	MICROSCHEMA_UPDATED("mesh.microschema.updated", SimpleElementEventModel.class),
 
-	MICROSCHEMA_DELETED("mesh.microschema.deleted", MeshElementEventModelImpl.class),
+	MICROSCHEMA_DELETED("mesh.microschema.deleted", SimpleElementEventModel.class),
 
 	/* Branch */
 

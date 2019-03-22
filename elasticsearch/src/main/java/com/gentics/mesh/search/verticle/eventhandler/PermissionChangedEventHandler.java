@@ -13,6 +13,8 @@ import com.gentics.mesh.core.data.schema.MicroschemaContainer;
 import com.gentics.mesh.core.data.schema.SchemaContainer;
 import com.gentics.mesh.core.data.search.request.UpdateDocumentRequest;
 import com.gentics.mesh.core.rest.MeshEvent;
+import com.gentics.mesh.core.rest.event.ProjectEvent;
+import com.gentics.mesh.core.rest.event.node.NodeMeshEventModel;
 import com.gentics.mesh.core.rest.event.role.PermissionChangedEventModel;
 import com.gentics.mesh.graphdb.model.MeshElement;
 import com.gentics.mesh.search.index.node.NodeContainerTransformer;
@@ -63,16 +65,17 @@ public class PermissionChangedEventHandler implements EventHandler {
 	}
 
 	private Flowable<UpdateDocumentRequest> handleNodePermissionsChange(PermissionChangedEventModel model) {
+		NodeMeshEventModel nodeModel = (NodeMeshEventModel) model.getElement();
 		NodeContainerTransformer tf = (NodeContainerTransformer) meshEntities.nodeContent.getTransformer();
 		return meshHelper.getDb().tx(() ->
-			ofNullable(meshHelper.getBoot().projectRoot().findByUuid(model.getProject().getUuid()))
+			ofNullable(meshHelper.getBoot().projectRoot().findByUuid(nodeModel.getProject().getUuid()))
 				.flatMap(project -> ofNullable(project.getNodeRoot().findByUuid(model.getUuid()))
 				.flatMap(node -> project.getBranchRoot().findAll().stream().map(MeshElement::getUuid)
 				.flatMap(branchUuid -> Stream.of(ContainerType.DRAFT, ContainerType.PUBLISHED)
 				.flatMap(type -> node.getGraphFieldContainers(branchUuid, type).stream()
 				.map(container -> meshHelper.updateDocumentRequest(
 					NodeGraphFieldContainer.composeIndexName(
-						model.getProject().getUuid(),
+						nodeModel.getProject().getUuid(),
 						branchUuid,
 						container.getSchemaContainerVersion().getUuid(),
 						type
@@ -110,12 +113,16 @@ public class PermissionChangedEventHandler implements EventHandler {
 			case MICROSCHEMAVERSION:
 				return MicroschemaContainer.composeIndexName();
 			case TAG:
-				return Tag.composeIndexName(model.getProject().getUuid());
+				return Tag.composeIndexName(projectUuid(model));
 			case TAGFAMILY:
-				return TagFamily.composeIndexName(model.getProject().getUuid());
+				return TagFamily.composeIndexName(projectUuid(model));
 			default:
 				throw new InvalidParameterException("Unexpected event: " + model);
 		}
+	}
+
+	private String projectUuid(PermissionChangedEventModel model) {
+		return ((ProjectEvent)model.getElement()).getProject().getUuid();
 	}
 
 

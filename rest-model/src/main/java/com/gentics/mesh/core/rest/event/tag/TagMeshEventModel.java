@@ -17,7 +17,7 @@ public class TagMeshEventModel implements MeshProjectElementEventModel {
 
 	@JsonProperty(required = true)
 	@JsonPropertyDescription("The tag family of this tag")
-	private TagFamilyReference tagFamily;
+	private final TagFamilyReference tagFamily;
 
 	public TagMeshEventModel(ProjectElementEventModel baseProperties, TagFamilyReference tagFamily) {
 		this.baseProperties = baseProperties;
@@ -76,10 +76,6 @@ public class TagMeshEventModel implements MeshProjectElementEventModel {
 
 	public TagFamilyReference getTagFamily() {
 		return tagFamily;
-	}
-
-	public void setTagFamily(TagFamilyReference tagFamily) {
-		this.tagFamily = tagFamily;
 	}
 
 }

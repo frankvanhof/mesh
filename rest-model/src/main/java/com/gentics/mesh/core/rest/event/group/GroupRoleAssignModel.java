@@ -1,31 +1,59 @@
 package com.gentics.mesh.core.rest.event.group;
 
-import com.gentics.mesh.core.rest.event.AbstractMeshEventModel;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
+import com.fasterxml.jackson.annotation.JsonUnwrapped;
+import com.gentics.mesh.core.rest.MeshEvent;
+import com.gentics.mesh.core.rest.event.EventCauseInfo;
+import com.gentics.mesh.core.rest.event.MeshEventModel;
+import com.gentics.mesh.core.rest.event.MeshEventModelProperties;
 import com.gentics.mesh.core.rest.group.GroupReference;
 import com.gentics.mesh.core.rest.role.RoleReference;
 
-public class GroupRoleAssignModel extends AbstractMeshEventModel {
+public class GroupRoleAssignModel implements MeshEventModel {
 
-	private GroupReference group;
-	private RoleReference role;
+	@JsonUnwrapped
+	private final MeshEventModelProperties baseProperties;
 
-	public GroupRoleAssignModel() {
+	@JsonProperty(required = true)
+	@JsonPropertyDescription("Reference to the group that was assigned.")
+	private final GroupReference group;
+
+	@JsonProperty(required = true)
+	@JsonPropertyDescription("Reference to the role that was assigned.")
+	private final RoleReference role;
+
+	public GroupRoleAssignModel(MeshEventModelProperties baseProperties, GroupReference group, RoleReference role) {
+		this.baseProperties = baseProperties;
+		this.group = group;
+		this.role = role;
 	}
 
 	public GroupReference getGroup() {
 		return group;
 	}
 
-	public void setGroup(GroupReference group) {
-		this.group = group;
-	}
-
 	public RoleReference getRole() {
 		return role;
 	}
 
-	public void setRole(RoleReference role) {
-		this.role = role;
+	@Override
+	public String getOrigin() {
+		return baseProperties.getOrigin();
 	}
 
+	@Override
+	public MeshEvent getEvent() {
+		return baseProperties.getEvent();
+	}
+
+	@Override
+	public EventCauseInfo getCause() {
+		return baseProperties.getCause();
+	}
+
+	@Override
+	public void setCause(EventCauseInfo cause) {
+		baseProperties.setCause(cause);
+	}
 }

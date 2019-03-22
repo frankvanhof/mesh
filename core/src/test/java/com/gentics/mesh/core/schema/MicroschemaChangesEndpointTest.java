@@ -12,6 +12,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
+import com.gentics.mesh.core.rest.event.MeshElementEventModel;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -19,7 +20,6 @@ import com.gentics.mesh.core.data.NodeGraphFieldContainer;
 import com.gentics.mesh.core.data.node.Node;
 import com.gentics.mesh.core.data.schema.MicroschemaContainer;
 import com.gentics.mesh.core.data.schema.MicroschemaContainerVersion;
-import com.gentics.mesh.core.rest.event.impl.MeshElementEventModelImpl;
 import com.gentics.mesh.core.rest.micronode.MicronodeResponse;
 import com.gentics.mesh.core.rest.microschema.impl.MicroschemaResponse;
 import com.gentics.mesh.core.rest.microschema.impl.MicroschemaUpdateRequest;
@@ -122,7 +122,7 @@ public class MicroschemaChangesEndpointTest extends AbstractMeshTest {
 		String vcardUuid = tx(() -> microschemaContainers().get("vcard").getUuid());
 		MicroschemaContainerVersion beforeVersion = tx(() -> microschemaContainers().get("vcard").getLatestVersion());
 
-		expect(MICROSCHEMA_UPDATED).match(1, MeshElementEventModelImpl.class, event -> {
+		expect(MICROSCHEMA_UPDATED).match(1, MeshElementEventModel.class, event -> {
 			assertThat(event).hasName(newName).hasUuid(vcardUuid);
 		}).one();
 		expect(MICROSCHEMA_MIGRATION_START).none();

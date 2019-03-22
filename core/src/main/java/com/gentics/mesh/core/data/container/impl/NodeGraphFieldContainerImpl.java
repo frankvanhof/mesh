@@ -35,6 +35,11 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
+import com.gentics.mesh.Mesh;
+import com.gentics.mesh.core.rest.event.MeshElementEventProperties;
+import com.gentics.mesh.core.rest.event.MeshEventModelProperties;
+import com.gentics.mesh.core.rest.event.ProjectElementEventModel;
+import com.gentics.mesh.core.rest.event.SimpleElementEventModel;
 import org.apache.commons.collections.CollectionUtils;
 
 import com.gentics.mesh.context.BulkActionContext;
@@ -755,23 +760,19 @@ public class NodeGraphFieldContainerImpl extends AbstractGraphFieldContainerImpl
 	 * @return Created model
 	 */
 	private NodeMeshEventModel createEvent(MeshEvent event, String branchUuid, ContainerType type) {
-		NodeMeshEventModel model = new NodeMeshEventModel(uuid, origin, baseProperies, project, branchUuid);
-		model.setEvent(event);
 		Node node = getParentNode(branchUuid);
-		String nodeUuid = node.getUuid();
-		model.setUuid(nodeUuid);
-		model.setName(getDisplayFieldValue());
-		model.setBranchUuid(branchUuid);
+		NodeMeshEventModel model = new NodeMeshEventModel(new ProjectElementEventModel(new SimpleElementEventModel(
+			new MeshEventModelProperties(Mesh.mesh().getOptions().getNodeName(), event),
+			new MeshElementEventProperties(node.getUuid())
+		), node.getProject().transformToReference()), branchUuid);
+
 		model.setLanguageTag(getLanguageTag());
-		if (type != null) {
-			model.setType(type.getHumanCode());
-		}
+		model.setName(getDisplayFieldValue());
+
 		SchemaContainerVersion version = getSchemaContainerVersion();
 		if (version != null) {
 			model.setSchema(version.transformToReference());
 		}
-		Project project = node.getProject();
-		model.setProject(project.transformToReference());
 		return model;
 	}
 

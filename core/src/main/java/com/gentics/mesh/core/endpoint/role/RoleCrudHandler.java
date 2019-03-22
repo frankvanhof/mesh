@@ -150,7 +150,7 @@ public class RoleCrudHandler extends AbstractCrudHandler<Role, RoleResponse> {
 							log.debug("Revoking permission: " + p);
 						}
 					}
-					event.add(role.onPermissionChanged());
+					event.add(role.onPermissionChanged(requestModel.getPermissions()));
 					// 3. Apply the permission actions
 					element.applyPermissions(batch, role, BooleanUtils.isTrue(requestModel.getRecursive()), permissionsToGrant, permissionsToRevoke);
 					return role.getName();

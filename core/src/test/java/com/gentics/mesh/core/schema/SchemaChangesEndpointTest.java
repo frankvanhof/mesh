@@ -19,6 +19,7 @@ import static org.junit.Assert.assertTrue;
 import java.io.IOException;
 import java.util.Objects;
 
+import com.gentics.mesh.core.rest.event.MeshElementEventModel;
 import org.apache.commons.io.IOUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -35,7 +36,6 @@ import com.gentics.mesh.core.data.schema.SchemaContainer;
 import com.gentics.mesh.core.data.schema.SchemaContainerVersion;
 import com.gentics.mesh.core.rest.common.GenericMessageResponse;
 import com.gentics.mesh.core.rest.error.GenericRestException;
-import com.gentics.mesh.core.rest.event.impl.MeshElementEventModelImpl;
 import com.gentics.mesh.core.rest.job.JobListResponse;
 import com.gentics.mesh.core.rest.node.NodeResponse;
 import com.gentics.mesh.core.rest.node.NodeUpdateRequest;
@@ -100,7 +100,7 @@ public class SchemaChangesEndpointTest extends AbstractNodeSearchEndpointTest {
 		String uuid = tx(() -> schemaContainer("folder").getUuid());
 		SchemaChangesListModel changes = JsonUtil.readValue(json, SchemaChangesListModel.class);
 
-		expect(SCHEMA_UPDATED).match(1, MeshElementEventModelImpl.class, event -> {
+		expect(SCHEMA_UPDATED).match(1, MeshElementEventModel.class, event -> {
 			assertEquals("folder", event.getName());
 			assertEquals(uuid, event.getUuid());
 		}).one();

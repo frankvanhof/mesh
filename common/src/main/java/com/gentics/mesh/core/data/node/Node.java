@@ -749,7 +749,7 @@ public interface Node extends MeshCoreVertex<NodeResponse, Node>, CreatorTrackin
 	 * @param languageTag
 	 * @return Created event
 	 */
-	NodeMeshEventModel onDeleted(String uuid, String name, SchemaContainer schema, String branchUuid, String type, String languageTag);
+	NodeMeshEventModel onDeleted(String name, String branchUuid, String type, String languageTag);
 
 	/**
 	 * Create a node tagged / untagged event.

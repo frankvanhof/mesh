@@ -28,7 +28,6 @@ import static io.netty.handler.codec.http.HttpResponseStatus.CONFLICT;
 import static io.netty.handler.codec.http.HttpResponseStatus.FORBIDDEN;
 import static io.netty.handler.codec.http.HttpResponseStatus.INTERNAL_SERVER_ERROR;
 import static io.netty.handler.codec.http.HttpResponseStatus.NOT_FOUND;
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
@@ -41,6 +40,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.gentics.mesh.core.rest.event.MeshElementEventModel;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -49,7 +49,6 @@ import org.junit.Test;
 import com.gentics.mesh.context.InternalActionContext;
 import com.gentics.mesh.core.data.Branch;
 import com.gentics.mesh.core.data.Project;
-import com.gentics.mesh.core.rest.MeshEvent;
 import com.gentics.mesh.core.rest.admin.migration.MigrationStatus;
 import com.gentics.mesh.core.rest.branch.BranchCreateRequest;
 import com.gentics.mesh.core.rest.branch.BranchListResponse;
@@ -64,7 +63,6 @@ import com.gentics.mesh.core.rest.common.ListResponse;
 import com.gentics.mesh.core.rest.error.GenericRestException;
 import com.gentics.mesh.core.rest.event.branch.BranchMicroschemaAssignModel;
 import com.gentics.mesh.core.rest.event.branch.BranchSchemaAssignEventModel;
-import com.gentics.mesh.core.rest.event.impl.MeshElementEventModelImpl;
 import com.gentics.mesh.core.rest.event.project.ProjectBranchEventModel;
 import com.gentics.mesh.core.rest.job.JobListResponse;
 import com.gentics.mesh.core.rest.job.JobResponse;
@@ -193,7 +191,7 @@ public class BranchEndpointTest extends AbstractMeshTest implements BasicRestTes
 		BranchCreateRequest request = new BranchCreateRequest();
 		request.setName(branchName);
 
-		expect(BRANCH_CREATED).match(1, MeshElementEventModelImpl.class, event -> {
+		expect(BRANCH_CREATED).match(1, MeshElementEventModel.class, event -> {
 			assertThat(event).hasName(branchName).uuidNotNull();
 		});
 		expect(BRANCH_MIGRATION_START).one();
@@ -621,7 +619,7 @@ public class BranchEndpointTest extends AbstractMeshTest implements BasicRestTes
 		String newName = "New Branch Name";
 		String anotherNewName = "Another New Branch Name";
 
-		expect(BRANCH_UPDATED).match(1, MeshElementEventModelImpl.class, event -> {
+		expect(BRANCH_UPDATED).match(1, MeshElementEventModel.class, event -> {
 			assertThat(event).hasName(newName).hasUuid(initialBranchUuid());
 		});
 
